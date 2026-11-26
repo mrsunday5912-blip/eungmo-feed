@@ -1,6 +1,6 @@
-# 응모수첩 공고 피드
+# 응모노트 공고 피드
 
-응모수첩은 GitHub Pages의 [catalog.json](https://mrsunday5912-blip.github.io/eungmo-feed/catalog.json)을 읽습니다. 대한민국 정부, 지방자치단체, 공공기관, 공기업이 직접 주최하는 무료 행사의 공개 안내를 싣습니다. 공고에서 확인한 응모 링크는 앱의 응모 버튼에 사용하며, 링크가 비어 있으면 공고를 엽니다. 개인 이름, 연락처, 당첨자 명단, 쿠폰 번호는 수집하거나 싣지 않습니다.
+응모노트은 GitHub Pages의 [catalog.json](https://mrsunday5912-blip.github.io/eungmo-feed/catalog.json)을 읽습니다. 대한민국 정부, 지방자치단체, 공공기관, 공기업이 직접 주최하는 무료 행사의 공개 안내를 싣습니다. 공고에서 확인한 응모 링크는 앱의 응모 버튼에 사용하며, 링크가 비어 있으면 공고를 엽니다. 개인 이름, 연락처, 당첨자 명단, 쿠폰 번호는 수집하거나 싣지 않습니다.
 
 오류를 발견하면 [이 저장소의 이슈](https://github.com/mrsunday5912-blip/eungmo-feed/issues/new)에 행사 제목, 정정할 항목, 확인 가능한 공식 공고 주소를 적어 주세요. 이슈는 공개되므로 개인정보를 적지 마세요.
 
@@ -16,5 +16,5 @@ Node.js 22 이상과 Git으로 저장소에서 아래 순서대로 진행합니�
 ## 행사 이미지
 
 - 선택 필드 `image`에 `wide`, `square`, `kind`, `credit`을 넣습니다. `wide`와 `square`는 각각 `images/<행사id>-wide.webp`(1080×405)와 `images/<행사id>-square.webp`(240×240)입니다. WebP 두 파일을 각각 150KB 이하로 저장하고 다시 열어 확인합니다.
-- 행사 카드의 기본 사진은 `kind: "ai"`입니다. 공고의 주제·장소·경품·분위기·주요 색을 글로 정리해 Codex 이미지 생성에 입력합니다. 새 실사풍 사진에는 글자, 기관 로고, 실존 인물 얼굴, 캐릭터가 없어야 합니다. `credit`은 `AI 이미지`로 두고 `sourceUrl`과 `license`는 생략하거나 `null`로 둡니다.
-- 공공누리 제1유형 적용이 확인된 공식 사진은 `images/<행사id>-official-wide.webp`와 `images/<행사id>-official-square.webp`로 보조용으로 보관합니다. 공고 주소, 이미지 원본 주소, 제1유형 표시를 저장해 Neon으로 확인합니다. `image.kind`에 `official`을 사용하는 경우 `sourceUrl`은 `officialHosts`에 등록된 HTTPS 원본 주소, `license`는 `KOGL-1`, `credit`에는 기관과 이용 조건을 적어야 합니다. `image` 필드는 없는 상태도 지원합니다.
+- 신규 행사는 `category`에 따라 `images/category-quiz-*.webp`, `images/category-survey-*.webp`, `images/category-event-*.webp` 중 해당하는 가로·정사각 기본 그림을 행사 ID별 파일로 복사합니다. `image.kind`는 `ai`, `image.credit`은 `AI 이미지`로 적고 `sourceUrl`과 `license`는 생략하거나 `null`로 둡니다. 기존 행사 사진은 유지합니다.
+- `image`는 선택 필드입니다. `kind`에 `official`을 쓰는 데이터의 경우 `sourceUrl`은 `officialHosts`에 등록된 HTTPS 원본 주소, `license`는 `KOGL-1`이어야 합니다. `credit`에는 기관과 이용 조건을 적습니다.

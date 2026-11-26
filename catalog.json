@@ -1,7 +1,7 @@
 {
   "format": "eungmo-toss-v1",
   "review": "ai-double-checked",
-  "updatedAt": "2026-11-26T13:16:51+09:00",
+  "updatedAt": "2026-11-27T08:10:41+09:00",
   "officialHosts": [
     "kosis.kr",
     "www.ganghwa.go.kr",
@@ -11,7 +11,10 @@
     "www.gg.go.kr",
     "survey.gg.go.kr",
     "kh.or.kr",
-    "www.mohw.go.kr"
+    "www.mohw.go.kr",
+    "culture.mpva.go.kr",
+    "youth.seoul.go.kr",
+    "modu.go.kr"
   ],
   "events": [
     {
@@ -227,6 +230,81 @@
         "credit": "AI 이미지",
         "sourceUrl": null,
         "license": null
+      }
+    },
+    {
+      "id": "mpva-quiz-2026-11",
+      "title": "11월 보훈문화 종합 포털 퀴즈 이벤트",
+      "organizer": "국가보훈부",
+      "prize": "정답자 100명 추첨 · 경품 종류는 공고 본문에 공개되지 않았어요.",
+      "startDate": "2026-11-16",
+      "deadline": "2026-11-30",
+      "deadlineTime": null,
+      "announcementDate": "2026-12-02",
+      "announcementMethod": "12월 2일 보훈문화 종합 포털 공지사항에 발표해요.",
+      "rules": "11월 이달의 독립운동가 관련 자료를 참고해 퀴즈에 참여해요. 정답자 중에서 추첨해요.",
+      "announcementUrl": "https://culture.mpva.go.kr/intro/ntc",
+      "category": "quiz",
+      "entryUrl": "https://naver.me/5K6RZia0",
+      "referenceUrl": "https://culture.mpva.go.kr/actv/cult/190",
+      "firstPublishedOn": "2026-11-27",
+      "verifiedAt": "2026-11-27",
+      "resultUrl": null,
+      "image": {
+        "wide": "images/mpva-quiz-2026-11-wide.webp",
+        "square": "images/mpva-quiz-2026-11-square.webp",
+        "kind": "ai",
+        "credit": "AI 이미지"
+      }
+    },
+    {
+      "id": "seoul-youngtech-survey-2026",
+      "title": "2026년 서울 영테크 홈페이지 만족도 조사",
+      "organizer": "서울특별시",
+      "prize": "모바일 상품권 1만 원 · 100명",
+      "startDate": "2026-11-23",
+      "deadline": "2026-12-04",
+      "deadlineTime": "18:00",
+      "announcementDate": "2026-12-07",
+      "announcementMethod": "12월 7일 오후 5시에 서울 영테크 공지사항에 발표해요.",
+      "rules": "서울 영테크 누리집 회원이 참여할 수 있어요. 설문에 응답한 사람 중에서 추첨해요.",
+      "announcementUrl": null,
+      "category": "survey",
+      "entryUrl": "https://youth.seoul.go.kr/youngtech/event/6",
+      "referenceUrl": "https://youth.seoul.go.kr/bbs/view.do?key=2303300002&pstSn=2611230003&sc_bbsCtgrySn=2304110001",
+      "firstPublishedOn": "2026-11-27",
+      "verifiedAt": "2026-11-27",
+      "resultUrl": null,
+      "image": {
+        "wide": "images/seoul-youngtech-survey-2026-wide.webp",
+        "square": "images/seoul-youngtech-survey-2026-square.webp",
+        "kind": "ai",
+        "credit": "AI 이미지"
+      }
+    },
+    {
+      "id": "mois-innovation-vote-2026",
+      "title": "2026년 정부혁신 우수사례 국민심사 · 차관급 중앙행정기관",
+      "organizer": "행정안전부",
+      "prize": "갤럭시 버즈4 1명, 배달의민족 교환권 40명, 다이소 교환권 400명 · 변경될 수 있어요.",
+      "startDate": "2026-11-23",
+      "deadline": "2026-12-13",
+      "deadlineTime": null,
+      "announcementDate": null,
+      "announcementMethod": "경품 당첨 발표 일정과 방법은 공고에 공개되지 않았어요.",
+      "rules": "국민 누구나 23개 차관급 중앙행정기관의 대표 사례 가운데 3건에 투표할 수 있어요. 갤럭시 버즈4는 1위 사례에 투표한 사람 중에 추첨해요.",
+      "announcementUrl": null,
+      "category": "event",
+      "entryUrl": null,
+      "referenceUrl": "https://modu.go.kr/fron/jdgmn/jdgmnView.do?date_range=&menu_id=&miv_pageNo=&orderBy=&qustnr_bgnde=&qustnr_endde=&qustnr_id=34c91837d0b34becbc65761b8d2a0224&searchQustnrSttusCode=&search_code=&search_orgNm=&search_sj_cn=&search_txt=",
+      "firstPublishedOn": "2026-11-27",
+      "verifiedAt": "2026-11-27",
+      "resultUrl": null,
+      "image": {
+        "wide": "images/mois-innovation-vote-2026-wide.webp",
+        "square": "images/mois-innovation-vote-2026-square.webp",
+        "kind": "ai",
+        "credit": "AI 이미지"
       }
     }
   ]
