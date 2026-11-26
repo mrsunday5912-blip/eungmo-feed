@@ -1,11 +1,17 @@
 {
   "format": "eungmo-toss-v1",
   "review": "ai-double-checked",
-  "updatedAt": "2026-11-26T10:44:55+09:00",
+  "updatedAt": "2026-11-26T11:57:54+09:00",
   "officialHosts": [
     "kosis.kr",
     "www.ganghwa.go.kr",
-    "www.goodprice.go.kr"
+    "www.goodprice.go.kr",
+    "www.jeju.go.kr",
+    "daum.jeonju.go.kr",
+    "www.gg.go.kr",
+    "survey.gg.go.kr",
+    "kh.or.kr",
+    "www.mohw.go.kr"
   ],
   "events": [
     {
@@ -20,10 +26,12 @@
       "announcementMethod": "퀴즈가 끝난 뒤 한 달 이내에 KOSIS 공지사항에서 발표해요. 발표 당일에 상품권을 모바일로 보내요.",
       "rules": "국가통계포털 이용자가 대상이에요. 퀴즈 만점자 중에서 추첨해요. 같은 휴대전화번호로 여러 번 응모하면 마지막 답안만 인정돼요.",
       "firstPublishedOn": "2026-11-25",
-      "referenceUrl": null,
+      "referenceUrl": "https://kosis.kr/index/index.do",
       "announcementUrl": "https://kosis.kr/serviceInfo/noticeList.do",
       "resultUrl": null,
-      "verifiedAt": "2026-11-26"
+      "verifiedAt": "2026-11-26",
+      "category": "quiz",
+      "entryUrl": null
     },
     {
       "id": "ganghwa-home-2026",
@@ -40,7 +48,9 @@
       "referenceUrl": "https://www.ganghwa.go.kr/bbs/bbsMsgDetail.do?bcd=notice&msg_seq=12536",
       "announcementUrl": "https://www.ganghwa.go.kr/main/ganghwa/news/notice.jsp",
       "resultUrl": null,
-      "verifiedAt": "2026-11-26"
+      "verifiedAt": "2026-11-26",
+      "category": "survey",
+      "entryUrl": "https://www.ganghwa.go.kr/main/community/survey.jsp"
     },
     {
       "id": "goodprice-survey-2026",
@@ -57,7 +67,103 @@
       "referenceUrl": "https://www.goodprice.go.kr/cmnt/boardInfo.do?bbsId=BBSCTT_00101&bbscttSn=68",
       "announcementUrl": "https://www.goodprice.go.kr/cmnt/boardList.do?bbsId=BBSCTT_00101",
       "resultUrl": null,
-      "verifiedAt": "2026-11-26"
+      "verifiedAt": "2026-11-26",
+      "category": "survey",
+      "entryUrl": "https://forms.gle/ZUA4nJT8RPz4Vvo28"
+    },
+    {
+      "startDate": "2026-10-09",
+      "deadlineTime": null,
+      "announcementDate": "2026-12-11",
+      "announcementUrl": "https://www.jeju.go.kr/jejueo/community/notice.htm",
+      "resultUrl": null,
+      "firstPublishedOn": "2026-11-26",
+      "verifiedAt": "2026-11-26",
+      "id": "jeju-word-2026-autumn",
+      "title": "제주어왓 가을 퀴즈",
+      "organizer": "제주학연구센터",
+      "prize": "모바일 상품권 1만 원 · 추첨 100명",
+      "deadline": "2026-12-08",
+      "announcementMethod": "제주어왓 새 소식에 발표할 예정이에요. 발표일부터 10일 안에 휴대전화로 경품을 보내요.",
+      "rules": "제주어에 관심 있는 누구나 참여할 수 있어요. 제주도청 홈페이지 회원으로 로그인한 뒤 이벤트 응모 게시판에서 정답 번호와 응원 메시지를 제출하세요. 1인 1회만 참여할 수 있어요.",
+      "referenceUrl": "https://www.jeju.go.kr/jejueo/community/notice.htm?act=view&seq=2037162",
+      "category": "quiz"
+    },
+    {
+      "startDate": null,
+      "deadlineTime": "18:00",
+      "announcementDate": null,
+      "announcementUrl": null,
+      "resultUrl": null,
+      "firstPublishedOn": "2026-11-26",
+      "verifiedAt": "2026-11-26",
+      "id": "jeonju-quiz-2026-12",
+      "title": "12월 전주다움 퀴즈",
+      "organizer": "전주시",
+      "prize": "아메리카노 기프티콘 1장 · 추첨 10명",
+      "deadline": "2026-12-10",
+      "announcementMethod": "전주다움 다음 호에 당첨자를 발표해요.",
+      "rules": "전주다움 기사에 나온 퀴즈를 풀고 정답, 이름, 휴대전화 연락처를 구글폼 또는 메일로 제출하세요. 1인 1회 참여할 수 있어요.",
+      "referenceUrl": "https://daum.jeonju.go.kr/main/menu?bwrite_id=VbrZyNYmZt22&do=view&gc=1022ORHT",
+      "entryUrl": "https://docs.google.com/forms/d/e/1FAIpQLScMAYAYNY4V58sybe8Dj-ySJbrkHzl1Ggf6WAoMI9tduG1Tgw/viewform",
+      "category": "quiz"
+    },
+    {
+      "startDate": "2026-11-16",
+      "deadlineTime": null,
+      "announcementDate": "2026-12-18",
+      "announcementUrl": "https://www.gg.go.kr/bbs/board.do?bsIdx=828&menuId=266053",
+      "resultUrl": null,
+      "firstPublishedOn": "2026-11-26",
+      "verifiedAt": "2026-11-26",
+      "id": "gg-news-survey-2026",
+      "title": "경기도뉴스포털 만족도 조사",
+      "organizer": "경기도",
+      "prize": "네이버페이 포인트 5천 원권 · 추첨 400명",
+      "deadline": "2026-12-04",
+      "announcementMethod": "12월 18일 경기도청 이벤트 소식에 게시할 예정이에요.",
+      "rules": "만 14세 이상 참여할 수 있어요. 설문 23문항에 응답하고 개인정보 수집·이용에 동의한 분이 추첨 대상이에요. 중복 참여는 추첨에서 제외돼요.",
+      "referenceUrl": "https://www.gg.go.kr/bbs/boardView.do?bIdx=276274137&bsIdx=838&menuId=1534",
+      "entryUrl": "https://survey.gg.go.kr/app/onvy/qestnnm.do?onvySn=548",
+      "category": "survey"
+    },
+    {
+      "startDate": "2026-11-23",
+      "deadlineTime": null,
+      "announcementDate": null,
+      "announcementUrl": null,
+      "resultUrl": null,
+      "firstPublishedOn": "2026-11-26",
+      "verifiedAt": "2026-11-26",
+      "id": "kh-web-survey-2026",
+      "title": "국가유산진흥원 홈페이지 만족도 조사",
+      "organizer": "국가유산진흥원",
+      "prize": "편의점 모바일 상품권 1만 원 · 추첨",
+      "deadline": "2026-12-06",
+      "announcementMethod": "당첨자 발표 일정과 방법은 공고에 공개되지 않았어요.",
+      "rules": "국가유산진흥원 홈페이지 이용자 만족도 설문에 응답하면 경품 추첨 대상이 돼요.",
+      "referenceUrl": "https://kh.or.kr/brd/board/644/L/SITES/100/menu/371?bbIdx=120055&brdType=R",
+      "entryUrl": "https://survey.metrix.co.kr/?2026kha",
+      "category": "survey"
+    },
+    {
+      "startDate": "2026-11-16",
+      "deadlineTime": null,
+      "announcementDate": "2026-12-04",
+      "announcementUrl": null,
+      "resultUrl": null,
+      "firstPublishedOn": "2026-11-26",
+      "verifiedAt": "2026-11-26",
+      "id": "mohw-support-2026",
+      "title": "발달장애인 인식개선 캠페인 응원 이벤트",
+      "organizer": "보건복지부",
+      "prize": "배달의민족 상품권 1만 원 · 추첨 100명",
+      "deadline": "2026-11-30",
+      "announcementMethod": "12월 4일 당첨자를 발표해요. 발표 경로는 공고에 공개되지 않았어요.",
+      "rules": "보건복지부TV를 구독하고 캠페인 영상에 좋아요와 응원 댓글을 남긴 뒤 구글폼을 작성하면 참여할 수 있어요.",
+      "referenceUrl": "https://www.mohw.go.kr/gallery.es?act=view&bid=0015&list_no=380636&mid=a10314000000",
+      "entryUrl": "https://forms.gle/y3HUJ4GPnAe6gmqt7",
+      "category": "event"
     }
   ]
 }

@@ -1,6 +1,6 @@
 # 응모수첩 공고 피드
 
-응모수첩은 GitHub Pages의 [catalog.json](https://mrsunday5912-blip.github.io/eungmo-feed/catalog.json)을 읽습니다. 대한민국 정부, 지방자치단체, 공공기관, 공기업이 직접 주최하는 무료 행사의 공개 안내만 싣습니다. 주소는 기관의 공식 공고와 발표에 사용합니다. 개인 이름, 연락처, 당첨자 명단, 쿠폰 번호는 수집하거나 싣지 않습니다.
+응모수첩은 GitHub Pages의 [catalog.json](https://mrsunday5912-blip.github.io/eungmo-feed/catalog.json)을 읽습니다. 대한민국 정부, 지방자치단체, 공공기관, 공기업이 직접 주최하는 무료 행사의 공개 안내를 싣습니다. 공고에서 확인한 응모 링크는 앱의 응모 버튼에 사용하며, 링크가 비어 있으면 공고를 엽니다. 개인 이름, 연락처, 당첨자 명단, 쿠폰 번호는 수집하거나 싣지 않습니다.
 
 오류를 발견하면 [이 저장소의 이슈](https://github.com/mrsunday5912-blip/eungmo-feed/issues/new)에 행사 제목, 정정할 항목, 확인 가능한 공식 공고 주소를 적어 주세요. 이슈는 공개되므로 개인정보를 적지 마세요.
 
@@ -8,7 +8,7 @@
 
 Node.js 22 이상과 Git으로 저장소에서 아래 순서대로 진행합니다.
 
-1. 직전 게시본에서 시작해 `catalog.json`을 수정합니다. 기존 행사의 `id`와 `firstPublishedOn`을 유지합니다. 공개되지 않은 날짜, 시각, 주소는 `null`로 적습니다. `referenceUrl`은 공고문, `announcementUrl`은 발표 확인 게시판, `resultUrl`은 실제 발표문 주소입니다.
-2. `node tools/validate.mjs`로 파일과 직전 커밋을 대조합니다. `node tools/diff.mjs`로 신규·수정·내림을 확인합니다.
-3. `node tools/diff.mjs --changes-json`의 UTF-8 출력을 저장소 밖에 저장합니다. 지정된 Playwright 원문 수집 절차에서 공고의 본문과 화면을 행사별로 저장합니다. 변경 JSON과 수집 시각을 `toss-feed-verify.ps1`의 `-Events`와 `-Stamp`에 전달합니다. Neon이 저장된 텍스트를 읽어 `OK`로 판정한 변경만 반영합니다. 원문 누락이나 `FAIL`이면 신규는 제외하고 수정은 직전 값으로 돌린 뒤 다시 검사합니다. Neon 실행이나 결과 형식에 오류가 있으면 게시를 중단합니다.
-4. 행사에 실제 변경이 있으면 `node tools/snapshot.mjs`를 실행합니다. 직전 커밋의 피드를 한국 시간 기준 파일로 보관하고 최신 90개를 유지합니다. `log/YYYY-MM.md`에 결과 한 줄을 적어 함께 커밋한 뒤 피드 전용 배포 키로 `main`을 올립니다.
+1. 직전 검수본에서 초안을 만듭니다. 기존 행사의 `id`와 `firstPublishedOn`을 유지합니다. 공개되지 않은 날짜, 시각, 주소는 `null`로 적습니다. `referenceUrl`은 공고문, `announcementUrl`은 발표 확인 게시판, `resultUrl`은 실제 발표문 주소입니다. 선택 필드 `entryUrl`에는 해당 회차의 공식 공고에 표시된 HTTPS 응모 주소만 적습니다. 개인정보와 추적 매개변수는 금지합니다. 선택 필드 `category`에는 `quiz`, `survey`, `event` 중 하나를 적습니다.
+2. Playwright로 행사별 공고 본문과 화면을 지정 원문 폴더에 저장합니다. `node tools/validate.mjs --sources "<원문 루트>" <수집시각> <후보.json>`으로 검사합니다. 새로 넣거나 변경한 외부 응모 주소는 공고 본문에 그대로 있어야 합니다. 같은 원문 옵션으로 `node tools/diff.mjs`에서 변경을 확인하고 `--changes-json`을 붙여 변경 목록을 저장소 밖에 UTF-8로 저장합니다.
+3. 변경 목록과 수집 시각을 `toss-feed-verify.ps1`의 `-Events`와 `-Stamp`에 전달합니다. 종료 코드 0과 `state=complete`를 확인합니다. `OK`는 그대로 반영하고, `OK_WITHOUT_ENTRY`는 응모 주소를 비운 뒤 행사 정보를 반영합니다. 원문 누락이나 `FAIL`이면 신규는 제외하고 수정은 직전 값으로 돌립니다. Neon 실행이나 결과 형식에 오류가 있으면 게시를 중단합니다.
+4. 승인된 행사 변경을 `catalog.json`에 반영해 다시 검사하고 `node tools/snapshot.mjs --sources "<원문 루트>" <수집시각>`을 실행합니다. 직전 커밋의 피드를 한국 시간 기준 파일로 보관하고 최신 90개를 유지합니다. `log/YYYY-MM.md`에 결과 한 줄을 적어 함께 커밋한 뒤 피드 전용 배포 키로 `main`을 올립니다.

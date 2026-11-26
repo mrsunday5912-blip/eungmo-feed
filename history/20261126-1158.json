@@ -1,0 +1,63 @@
+{
+  "format": "eungmo-toss-v1",
+  "review": "ai-double-checked",
+  "updatedAt": "2026-11-26T10:44:55+09:00",
+  "officialHosts": [
+    "kosis.kr",
+    "www.ganghwa.go.kr",
+    "www.goodprice.go.kr"
+  ],
+  "events": [
+    {
+      "id": "kosis-2026-11",
+      "title": "11월 통계찾기 퀴즈",
+      "organizer": "국가통계포털(KOSIS)",
+      "prize": "모바일상품권 1만 원 · 150명",
+      "startDate": "2026-11-13",
+      "deadline": "2026-11-27",
+      "deadlineTime": null,
+      "announcementDate": null,
+      "announcementMethod": "퀴즈가 끝난 뒤 한 달 이내에 KOSIS 공지사항에서 발표해요. 발표 당일에 상품권을 모바일로 보내요.",
+      "rules": "국가통계포털 이용자가 대상이에요. 퀴즈 만점자 중에서 추첨해요. 같은 휴대전화번호로 여러 번 응모하면 마지막 답안만 인정돼요.",
+      "firstPublishedOn": "2026-11-25",
+      "referenceUrl": null,
+      "announcementUrl": "https://kosis.kr/serviceInfo/noticeList.do",
+      "resultUrl": null,
+      "verifiedAt": "2026-11-26"
+    },
+    {
+      "id": "ganghwa-home-2026",
+      "title": "강화군 홈페이지 개편 기념 설문",
+      "organizer": "인천광역시 강화군",
+      "prize": "모바일 커피쿠폰 1만 원 · 100명",
+      "startDate": "2026-11-23",
+      "deadline": "2026-12-07",
+      "deadlineTime": null,
+      "announcementDate": "2026-12-09",
+      "announcementMethod": "12월 9일 강화군청 공지사항에 발표하고 당첨자에게 개별 안내할 예정이에요.",
+      "rules": "강화군 홈페이지 방문자가 대상이에요. 추첨에 응모하려면 강화군 홈페이지에 로그인하고 설문에서 이름과 연락처를 적어야 해요.",
+      "firstPublishedOn": "2026-11-25",
+      "referenceUrl": "https://www.ganghwa.go.kr/bbs/bbsMsgDetail.do?bcd=notice&msg_seq=12536",
+      "announcementUrl": "https://www.ganghwa.go.kr/main/ganghwa/news/notice.jsp",
+      "resultUrl": null,
+      "verifiedAt": "2026-11-26"
+    },
+    {
+      "id": "goodprice-survey-2026",
+      "title": "착한가격업소 이용자 만족도 조사",
+      "organizer": "행정안전부",
+      "prize": "편의점 상품권 5천 원 · 추첨 100명 / 아이스크림 상품권 1만 원 · 우수 의견 3명",
+      "startDate": "2026-11-19",
+      "deadline": "2026-12-16",
+      "deadlineTime": null,
+      "announcementDate": null,
+      "announcementMethod": "12월 중 착한가격업소 홈페이지 공지사항에서 발표해요. 정확한 날짜는 아직 공개되지 않았어요.",
+      "rules": "착한가격업소나 홈페이지에 대한 의견을 받는 설문이에요. 경품을 받으려면 설문에서 개인정보 수집에 동의하고 쿠폰을 받을 휴대전화번호를 적어야 해요.",
+      "firstPublishedOn": "2026-11-25",
+      "referenceUrl": "https://www.goodprice.go.kr/cmnt/boardInfo.do?bbsId=BBSCTT_00101&bbscttSn=68",
+      "announcementUrl": "https://www.goodprice.go.kr/cmnt/boardList.do?bbsId=BBSCTT_00101",
+      "resultUrl": null,
+      "verifiedAt": "2026-11-26"
+    }
+  ]
+}

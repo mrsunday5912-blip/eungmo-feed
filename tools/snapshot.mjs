@@ -1,12 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import { linkSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { readCatalog, readPrevious, repoRoot, runCli, validateCatalog } from './validate.mjs';
+import { readCatalog, readPrevious, repoRoot, runCli, takeSourceArgs, validateCatalog } from './validate.mjs';
 
 runCli(() => {
-  if (process.argv.length !== 2) throw new Error('사용법: node tools/snapshot.mjs');
+  const args = process.argv.slice(2);
+  const sources = takeSourceArgs(args);
+  if (args.length) throw new Error('사용법: node tools/snapshot.mjs [--sources 원문폴더 YYYYMMDD-HHmm]');
   const previous = readPrevious();
-  validateCatalog(readCatalog(), previous?.catalog);
+  validateCatalog(readCatalog(), previous?.catalog, { sources });
   if (!previous) {
     console.log('첫 게시 · 직전본 없음');
     return;

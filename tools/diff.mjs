@@ -1,14 +1,15 @@
-import { eventFields, readCatalog, readPrevious, runCli, validateCatalog } from './validate.mjs';
+import { eventFields, readCatalog, readPrevious, runCli, takeSourceArgs, validateCatalog } from './validate.mjs';
 
 runCli(() => {
   const args = process.argv.slice(2);
   const json = args[0] === '--changes-json';
   if (json) args.shift();
+  const sources = takeSourceArgs(args);
   if (args.length > 1 || args[0]?.startsWith('-')) {
-    throw new Error('사용법: node tools/diff.mjs [--changes-json] [후보.json]');
+    throw new Error('사용법: node tools/diff.mjs [--changes-json] [--sources 원문폴더 YYYYMMDD-HHmm] [후보.json]');
   }
   const previous = readPrevious()?.catalog;
-  const candidate = validateCatalog(readCatalog(args[0]), previous);
+  const candidate = validateCatalog(readCatalog(args[0]), previous, { sources });
   const oldById = new Map(previous?.events.map(event => [event.id, event]));
   const ids = new Set(candidate.events.map(event => event.id));
   const changes = candidate.events.map(event => {
