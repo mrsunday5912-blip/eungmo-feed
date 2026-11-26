@@ -48,6 +48,49 @@ test('official HTTPS entry links pass; notice fields still reject forms', () => 
   assert.throws(() => validateCatalog(candidate({ referenceUrl: form })), /\.referenceUrl/);
 });
 
+const generatedImage = {
+  wide: 'images/example-quiz-wide.webp',
+  square: 'images/example-quiz-square.webp',
+  kind: 'ai',
+  credit: 'AI 이미지',
+};
+const officialImage = {
+  ...generatedImage,
+  kind: 'official',
+  credit: '이미지: 예시 기관(공공누리 제1유형)',
+  sourceUrl: 'https://example.go.kr/survey/poster.jpg',
+  license: 'KOGL-1',
+};
+
+test('generated images allow omitted or null source and license', () => {
+  validateCatalog(candidate({ image: generatedImage }));
+  validateCatalog(candidate({ image: { ...generatedImage, sourceUrl: null, license: null } }));
+  assert.throws(() => validateCatalog(candidate({ image: { ...generatedImage, sourceUrl: officialImage.sourceUrl } })), /\.image\.sourceUrl/);
+  assert.throws(() => validateCatalog(candidate({ image: { ...generatedImage, license: 'KOGL-1' } })), /\.image\.license/);
+});
+
+test('official images require a credit, KOGL-1 and an allowlisted HTTPS source', () => {
+  validateCatalog(candidate({ image: officialImage }));
+  for (const sourceUrl of [null, '', 'http://example.go.kr/poster.jpg', 'https://example.go.kr.invalid/poster.jpg',
+    'https://example.go.kr:443/poster.jpg', 'https://example.go.kr/poster.jpg?email=private']) {
+    assert.throws(() => validateCatalog(candidate({ image: { ...officialImage, sourceUrl } })), /\.image\.sourceUrl/);
+  }
+  for (const license of [null, 'KOGL-2', 'KOGL-3', 'KOGL-4']) {
+    assert.throws(() => validateCatalog(candidate({ image: { ...officialImage, license } })), /\.image\.license/);
+  }
+  assert.throws(() => validateCatalog(candidate({ image: { ...officialImage, credit: ' ' } })), /\.image\.credit/);
+});
+
+test('both image sizes use the exact local WebP paths for the event', () => {
+  for (const wide of ['https://example.go.kr/example-quiz-wide.webp', 'images/../example-quiz-wide.webp',
+    'images/other-wide.webp', 'images/example-quiz-wide.png', 'images/example-quiz-wide.webp?x=1']) {
+    assert.throws(() => validateCatalog(candidate({ image: { ...generatedImage, wide } })), /\.image\.wide/);
+  }
+  const { square, ...missingSquare } = generatedImage;
+  assert.throws(() => validateCatalog(candidate({ image: missingSquare })), /\.image/);
+  assert.throws(() => validateCatalog(candidate({ image: { ...generatedImage, square: generatedImage.wide } })), /\.image\.square/);
+});
+
 test('unsafe entry URL structures, personal data and trackers fail', () => {
   for (const link of [
     'http://example.go.kr/survey/current',

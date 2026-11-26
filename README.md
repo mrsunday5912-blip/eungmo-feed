@@ -12,3 +12,9 @@ Node.js 22 이상과 Git으로 저장소에서 아래 순서대로 진행합니�
 2. Playwright로 행사별 공고 본문과 화면을 지정 원문 폴더에 저장합니다. `node tools/validate.mjs --sources "<원문 루트>" <수집시각> <후보.json>`으로 검사합니다. 새로 넣거나 변경한 외부 응모 주소는 공고 본문에 그대로 있어야 합니다. 같은 원문 옵션으로 `node tools/diff.mjs`에서 변경을 확인하고 `--changes-json`을 붙여 변경 목록을 저장소 밖에 UTF-8로 저장합니다.
 3. 변경 목록과 수집 시각을 `toss-feed-verify.ps1`의 `-Events`와 `-Stamp`에 전달합니다. 종료 코드 0과 `state=complete`를 확인합니다. `OK`는 그대로 반영하고, `OK_WITHOUT_ENTRY`는 응모 주소를 비운 뒤 행사 정보를 반영합니다. 원문 누락이나 `FAIL`이면 신규는 제외하고 수정은 직전 값으로 돌립니다. Neon 실행이나 결과 형식에 오류가 있으면 게시를 중단합니다.
 4. 승인된 행사 변경을 `catalog.json`에 반영해 다시 검사하고 `node tools/snapshot.mjs --sources "<원문 루트>" <수집시각>`을 실행합니다. 직전 커밋의 피드를 한국 시간 기준 파일로 보관하고 최신 90개를 유지합니다. `log/YYYY-MM.md`에 결과 한 줄을 적어 함께 커밋한 뒤 피드 전용 배포 키로 `main`을 올립니다.
+
+## 행사 이미지
+
+- 선택 필드 `image`에 `wide`, `square`, `kind`, `credit`을 넣습니다. `wide`와 `square`는 각각 `images/<행사id>-wide.webp`(1080×405)와 `images/<행사id>-square.webp`(240×240)입니다. WebP 두 파일을 각각 150KB 이하로 저장하고 다시 열어 확인합니다.
+- 행사 카드의 기본 사진은 `kind: "ai"`입니다. 공고의 주제·장소·경품·분위기·주요 색을 글로 정리해 Codex 이미지 생성에 입력합니다. 새 실사풍 사진에는 글자, 기관 로고, 실존 인물 얼굴, 캐릭터가 없어야 합니다. `credit`은 `AI 이미지`로 두고 `sourceUrl`과 `license`는 생략하거나 `null`로 둡니다.
+- 공공누리 제1유형 적용이 확인된 공식 사진은 `images/<행사id>-official-wide.webp`와 `images/<행사id>-official-square.webp`로 보조용으로 보관합니다. 공고 주소, 이미지 원본 주소, 제1유형 표시를 저장해 Neon으로 확인합니다. `image.kind`에 `official`을 사용하는 경우 `sourceUrl`은 `officialHosts`에 등록된 HTTPS 원본 주소, `license`는 `KOGL-1`, `credit`에는 기관과 이용 조건을 적어야 합니다. `image` 필드는 없는 상태도 지원합니다.

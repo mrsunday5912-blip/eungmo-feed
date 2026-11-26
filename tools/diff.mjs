@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util';
 import { eventFields, readCatalog, readPrevious, runCli, takeSourceArgs, validateCatalog } from './validate.mjs';
 
 runCli(() => {
@@ -14,7 +15,7 @@ runCli(() => {
   const ids = new Set(candidate.events.map(event => event.id));
   const changes = candidate.events.map(event => {
     const former = oldById.get(event.id);
-    return { event, fields: eventFields.filter(field => !former || event[field] !== former[field]) };
+    return { event, fields: eventFields.filter(field => !former || !isDeepStrictEqual(event[field], former[field])) };
   });
   const added = changes.filter(({ event }) => !oldById.has(event.id));
   const modified = changes.filter(({ event, fields }) => oldById.has(event.id) && fields.length);

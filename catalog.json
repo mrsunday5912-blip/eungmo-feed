@@ -1,7 +1,7 @@
 {
   "format": "eungmo-toss-v1",
   "review": "ai-double-checked",
-  "updatedAt": "2026-11-26T11:57:54+09:00",
+  "updatedAt": "2026-11-26T13:16:51+09:00",
   "officialHosts": [
     "kosis.kr",
     "www.ganghwa.go.kr",
@@ -31,7 +31,15 @@
       "resultUrl": null,
       "verifiedAt": "2026-11-26",
       "category": "quiz",
-      "entryUrl": null
+      "entryUrl": null,
+      "image": {
+        "wide": "images/kosis-2026-11-wide.webp",
+        "square": "images/kosis-2026-11-square.webp",
+        "kind": "ai",
+        "credit": "AI 이미지",
+        "sourceUrl": null,
+        "license": null
+      }
     },
     {
       "id": "ganghwa-home-2026",
@@ -50,7 +58,15 @@
       "resultUrl": null,
       "verifiedAt": "2026-11-26",
       "category": "survey",
-      "entryUrl": "https://www.ganghwa.go.kr/main/community/survey.jsp"
+      "entryUrl": "https://www.ganghwa.go.kr/main/community/survey.jsp",
+      "image": {
+        "wide": "images/ganghwa-home-2026-wide.webp",
+        "square": "images/ganghwa-home-2026-square.webp",
+        "kind": "ai",
+        "credit": "AI 이미지",
+        "sourceUrl": null,
+        "license": null
+      }
     },
     {
       "id": "goodprice-survey-2026",
@@ -69,7 +85,15 @@
       "resultUrl": null,
       "verifiedAt": "2026-11-26",
       "category": "survey",
-      "entryUrl": "https://forms.gle/ZUA4nJT8RPz4Vvo28"
+      "entryUrl": "https://forms.gle/ZUA4nJT8RPz4Vvo28",
+      "image": {
+        "wide": "images/goodprice-survey-2026-wide.webp",
+        "square": "images/goodprice-survey-2026-square.webp",
+        "kind": "ai",
+        "credit": "AI 이미지",
+        "sourceUrl": null,
+        "license": null
+      }
     },
     {
       "startDate": "2026-10-09",
@@ -87,7 +111,15 @@
       "announcementMethod": "제주어왓 새 소식에 발표할 예정이에요. 발표일부터 10일 안에 휴대전화로 경품을 보내요.",
       "rules": "제주어에 관심 있는 누구나 참여할 수 있어요. 제주도청 홈페이지 회원으로 로그인한 뒤 이벤트 응모 게시판에서 정답 번호와 응원 메시지를 제출하세요. 1인 1회만 참여할 수 있어요.",
       "referenceUrl": "https://www.jeju.go.kr/jejueo/community/notice.htm?act=view&seq=2037162",
-      "category": "quiz"
+      "category": "quiz",
+      "image": {
+        "wide": "images/jeju-word-2026-autumn-wide.webp",
+        "square": "images/jeju-word-2026-autumn-square.webp",
+        "kind": "ai",
+        "credit": "AI 이미지",
+        "sourceUrl": null,
+        "license": null
+      }
     },
     {
       "startDate": null,
@@ -106,7 +138,15 @@
       "rules": "전주다움 기사에 나온 퀴즈를 풀고 정답, 이름, 휴대전화 연락처를 구글폼 또는 메일로 제출하세요. 1인 1회 참여할 수 있어요.",
       "referenceUrl": "https://daum.jeonju.go.kr/main/menu?bwrite_id=VbrZyNYmZt22&do=view&gc=1022ORHT",
       "entryUrl": "https://docs.google.com/forms/d/e/1FAIpQLScMAYAYNY4V58sybe8Dj-ySJbrkHzl1Ggf6WAoMI9tduG1Tgw/viewform",
-      "category": "quiz"
+      "category": "quiz",
+      "image": {
+        "wide": "images/jeonju-quiz-2026-12-wide.webp",
+        "square": "images/jeonju-quiz-2026-12-square.webp",
+        "kind": "ai",
+        "credit": "AI 이미지",
+        "sourceUrl": null,
+        "license": null
+      }
     },
     {
       "startDate": "2026-11-16",
@@ -125,7 +165,15 @@
       "rules": "만 14세 이상 참여할 수 있어요. 설문 23문항에 응답하고 개인정보 수집·이용에 동의한 분이 추첨 대상이에요. 중복 참여는 추첨에서 제외돼요.",
       "referenceUrl": "https://www.gg.go.kr/bbs/boardView.do?bIdx=276274137&bsIdx=838&menuId=1534",
       "entryUrl": "https://survey.gg.go.kr/app/onvy/qestnnm.do?onvySn=548",
-      "category": "survey"
+      "category": "survey",
+      "image": {
+        "wide": "images/gg-news-survey-2026-wide.webp",
+        "square": "images/gg-news-survey-2026-square.webp",
+        "kind": "ai",
+        "credit": "AI 이미지",
+        "sourceUrl": null,
+        "license": null
+      }
     },
     {
       "startDate": "2026-11-23",
@@ -144,7 +192,15 @@
       "rules": "국가유산진흥원 홈페이지 이용자 만족도 설문에 응답하면 경품 추첨 대상이 돼요.",
       "referenceUrl": "https://kh.or.kr/brd/board/644/L/SITES/100/menu/371?bbIdx=120055&brdType=R",
       "entryUrl": "https://survey.metrix.co.kr/?2026kha",
-      "category": "survey"
+      "category": "survey",
+      "image": {
+        "wide": "images/kh-web-survey-2026-wide.webp",
+        "square": "images/kh-web-survey-2026-square.webp",
+        "kind": "ai",
+        "credit": "AI 이미지",
+        "sourceUrl": null,
+        "license": null
+      }
     },
     {
       "startDate": "2026-11-16",
@@ -163,7 +219,15 @@
       "rules": "보건복지부TV를 구독하고 캠페인 영상에 좋아요와 응원 댓글을 남긴 뒤 구글폼을 작성하면 참여할 수 있어요.",
       "referenceUrl": "https://www.mohw.go.kr/gallery.es?act=view&bid=0015&list_no=380636&mid=a10314000000",
       "entryUrl": "https://forms.gle/y3HUJ4GPnAe6gmqt7",
-      "category": "event"
+      "category": "event",
+      "image": {
+        "wide": "images/mohw-support-2026-wide.webp",
+        "square": "images/mohw-support-2026-square.webp",
+        "kind": "ai",
+        "credit": "AI 이미지",
+        "sourceUrl": null,
+        "license": null
+      }
     }
   ]
 }

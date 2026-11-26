@@ -10,7 +10,7 @@ const textFields = ['title', 'organizer', 'prize', 'announcementMethod', 'rules'
 const dateFields = ['startDate', 'deadline', 'announcementDate', 'firstPublishedOn', 'verifiedAt'];
 const urlFields = ['referenceUrl', 'announcementUrl', 'resultUrl'];
 const requiredEventFields = ['id', ...textFields, ...dateFields, 'deadlineTime', ...urlFields];
-const optionalEventFields = ['entryUrl', 'category'];
+const optionalEventFields = ['entryUrl', 'category', 'image'];
 export const eventFields = [...requiredEventFields, ...optionalEventFields];
 
 const idPattern = /^[a-z0-9][a-z0-9-]{0,95}$/;
@@ -72,8 +72,9 @@ function checkEntryParameter(key, value, field) {
   }
 }
 
-function checkUrl(value, hosts, field, isEntry = false) {
+function checkUrl(value, hosts, field, purpose = 'notice') {
   if (value === null) return null;
+  const isEntry = purpose === 'entry';
   requireCondition(
     typeof value === 'string' && value.length <= 2048 && /^https:\/\/[^/]/.test(value) && !/[\s\\]/.test(value),
     field, '공식 HTTPS 주소가 필요합니다.',
@@ -91,7 +92,7 @@ function checkUrl(value, hosts, field, isEntry = false) {
   const authority = value.slice(8).split(/[/?#]/, 1)[0];
   requireCondition(authority === url.hostname && hostPattern.test(authority), field, '사용자 정보나 포트가 없는 정확한 호스트가 필요합니다.');
   requireCondition(isEntry || hosts.has(url.hostname), field, 'officialHosts의 정확한 호스트가 필요합니다.');
-  requireCondition(isEntry || !formPath.test(decodedPath), field, '응모·로그인·리디렉션 주소는 넣을 수 없습니다.');
+  requireCondition(purpose !== 'notice' || !formPath.test(decodedPath), field, '응모·로그인·리디렉션 주소는 넣을 수 없습니다.');
   checkPrivacy(value, field);
   checkPrivacy(decodedPath, field);
   checkPrivacy(decodedHash, field);
@@ -110,6 +111,28 @@ function checkUrl(value, hosts, field, isEntry = false) {
     }
   }
   return url;
+}
+
+function checkImage(image, eventId, hosts, path) {
+  checkFields(image, ['wide', 'square', 'kind', 'credit'], path, ['sourceUrl', 'license']);
+  for (const size of ['wide', 'square']) {
+    requireCondition(image[size] === `images/${eventId}-${size}.webp`, `${path}.${size}`,
+      '행사 ID와 크기에 맞는 상대 WebP 경로가 필요합니다.');
+  }
+  requireCondition(image.kind === 'official' || image.kind === 'ai', path + '.kind', 'official 또는 ai가 필요합니다.');
+  requireCondition(typeof image.credit === 'string' && image.credit.trim() && image.credit.length <= 180,
+    path + '.credit', '1~180자의 이미지 출처 표시가 필요합니다.');
+  checkPrivacy(image.credit, path + '.credit');
+  if (image.kind === 'official') {
+    requireCondition(image.license === 'KOGL-1', path + '.license', '공공누리 제1유형만 허용합니다.');
+    requireCondition(image.sourceUrl, path + '.sourceUrl', '공식 원본 주소가 필요합니다.');
+    checkUrl(image.sourceUrl, hosts, path + '.sourceUrl', 'image');
+  } else {
+    for (const field of ['sourceUrl', 'license']) {
+      requireCondition(!Object.hasOwn(image, field) || image[field] === null, `${path}.${field}`,
+        'AI 이미지는 이 필드를 비워 두세요.');
+    }
+  }
 }
 
 export function takeSourceArgs(args) {
@@ -208,7 +231,7 @@ export function validateCatalog(catalog, previous = null, { sources, schemaOnly 
     const [reference, announcement, result] = urlFields.map(field => checkUrl(event[field], hosts, path + '.' + field));
     const former = previousById.get(event.id);
     if (Object.hasOwn(event, 'entryUrl')) {
-      const entry = checkUrl(event.entryUrl, hosts, path + '.entryUrl', true);
+      const entry = checkUrl(event.entryUrl, hosts, path + '.entryUrl', 'entry');
       if (entry && !hosts.has(entry.hostname) && !schemaOnly) {
         requireCondition(former?.entryUrl === event.entryUrl && former.referenceUrl === event.referenceUrl
           || entryInNotice(event, hosts, sources), path + '.entryUrl', '공식 공고 본문에 있는 동일한 주소가 필요합니다.');
@@ -217,6 +240,7 @@ export function validateCatalog(catalog, previous = null, { sources, schemaOnly 
     if (Object.hasOwn(event, 'category')) {
       requireCondition(categories.has(event.category), path + '.category', 'quiz, survey, event 중 하나가 필요합니다.');
     }
+    if (Object.hasOwn(event, 'image')) checkImage(event.image, event.id, hosts, path + '.image');
     requireCondition(
       !result || (result.href !== reference?.href && result.href !== announcement?.href
         && !/(?:list|\/notice\.jsp)(?:\.do|\.jsp|\.html)?$/i.test(result.pathname)),
