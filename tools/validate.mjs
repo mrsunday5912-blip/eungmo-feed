@@ -299,7 +299,8 @@ export function validateCatalog(catalog, previous = null, { sources, schemaOnly 
       }
     }
     if (Object.hasOwn(event, 'category')) {
-      requireCondition(categories.has(event.category), path + '.category', 'quiz, survey, event 중 하나가 필요합니다.');
+      requireCondition(categories.has(event.category), path + '.category',
+        'quiz(퀴즈), survey(설문), event(추첨·투표·간단 참여)만 허용합니다. 공모전 분류는 사용할 수 없습니다.');
     }
     if (Object.hasOwn(event, 'image')) checkImage(event.image, event.id, eventHosts, path + '.image');
     requireCondition(

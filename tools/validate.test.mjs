@@ -52,6 +52,24 @@ test('v2 requires an explicit source while v1 continues rejecting the source fie
   assert.throws(() => validateCatalog(candidate({ source: 'public' })), /정의되지 않은 필드/);
 });
 
+test('both versions reject contest categories and accept a draw with 공모 in its title', () => {
+  for (const version of [value => value, asPublicV2]) {
+    for (const category of ['contest', 'competition', '공모전']) {
+      assert.throws(() => validateCatalog(version(candidate({ category }))), /\.category.*공모전/);
+    }
+    validateCatalog(version(candidate({
+      title: '주민 참여 공모',
+      category: 'event',
+      rules: '안내를 보고 참여한 분 중에 무작위로 추첨해요.',
+    })));
+    validateCatalog(version(candidate({
+      title: '우수사례 국민심사',
+      category: 'event',
+      rules: '이미 공개된 사례에 투표한 참여자 중에서 경품을 추첨해요.',
+    })));
+  }
+});
+
 test('official HTTPS entry links pass; notice fields still reject forms', () => {
   const form = 'https://example.go.kr/survey/current?id=123';
   validateCatalog(candidate({ entryUrl: form }));
