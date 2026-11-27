@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, rmdirSync, rmSync, writeFileSync } from 'node:f
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { validateCatalog } from './validate.mjs';
+import { asPublicV2, validateCatalog } from './validate.mjs';
 
 const event = {
   id: 'example-quiz',
@@ -40,6 +40,16 @@ test('optional fields preserve existing eungmo-toss-v1 catalogs', () => {
   assert.throws(() => validateCatalog(candidate({ category: 'other' })), /\.category/);
   assert.throws(() => validateCatalog(candidate({ category: null })), /\.category/);
   assert.throws(() => validateCatalog(candidate({ extraField: 'other' })), /정의되지 않은 필드/);
+});
+
+test('v2 requires an explicit source while v1 continues rejecting the source field', () => {
+  const legacy = candidate();
+  const v2 = asPublicV2(legacy);
+  assert.equal(v2.events[0].source, 'public');
+  validateCatalog(v2);
+  assert.throws(() => validateCatalog({ ...v2, events: legacy.events }), /필수 필드/);
+  assert.throws(() => validateCatalog({ ...v2, events: [{ ...event, source: 'other' }] }), /\.source/);
+  assert.throws(() => validateCatalog(candidate({ source: 'public' })), /정의되지 않은 필드/);
 });
 
 test('official HTTPS entry links pass; notice fields still reject forms', () => {

@@ -1,21 +1,27 @@
 import { isDeepStrictEqual } from 'node:util';
-import { eventFields, readCatalog, readPrevious, runCli, takeSourceArgs, validateCatalog } from './validate.mjs';
+import { eventFields, readCandidate, readPrevious, runCli, takeSourceArgs, validateCatalog } from './validate.mjs';
 
 runCli(() => {
   const args = process.argv.slice(2);
   const json = args[0] === '--changes-json';
   if (json) args.shift();
+  const v2 = args[0] === '--v2';
+  if (v2) args.shift();
   const sources = takeSourceArgs(args);
   if (args.length > 1 || args[0]?.startsWith('-')) {
-    throw new Error('사용법: node tools/diff.mjs [--changes-json] [--sources 원문폴더 YYYYMMDD-HHmm] [후보.json]');
+    throw new Error('사용법: node tools/diff.mjs [--changes-json] [--v2] [--sources 원문폴더 YYYYMMDD-HHmm] [후보.json]');
   }
-  const previous = readPrevious()?.catalog;
-  const candidate = validateCatalog(readCatalog(args[0]), previous, { sources });
+  const previous = readPrevious(v2)?.catalog;
+  const candidate = validateCatalog(readCandidate(args[0], v2), previous, { sources });
   const oldById = new Map(previous?.events.map(event => [event.id, event]));
   const ids = new Set(candidate.events.map(event => event.id));
   const changes = candidate.events.map(event => {
     const former = oldById.get(event.id);
-    return { event, fields: eventFields.filter(field => !former || !isDeepStrictEqual(event[field], former[field])) };
+    const fields = eventFields.filter(field => !former || !isDeepStrictEqual(event[field], former[field]));
+    if (event.source === 'company' && !isDeepStrictEqual(
+      candidate.companyHosts[event.organizer], previous?.companyHosts?.[event.organizer],
+    )) fields.push('companyHosts');
+    return { event, fields };
   });
   const added = changes.filter(({ event }) => !oldById.has(event.id));
   const modified = changes.filter(({ event, fields }) => oldById.has(event.id) && fields.length);
@@ -32,4 +38,5 @@ runCli(() => {
   if (JSON.stringify(previous?.officialHosts) !== JSON.stringify(candidate.officialHosts)) {
     console.log('~ officialHosts');
   }
+  if (v2 && !isDeepStrictEqual(previous?.companyHosts, candidate.companyHosts)) console.log('~ companyHosts');
 });

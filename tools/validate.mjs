@@ -2,9 +2,11 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { lstatSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isDeepStrictEqual } from 'node:util';
 
 export const repoRoot = fileURLToPath(new URL('../', import.meta.url));
 const catalogPath = fileURLToPath(new URL('../catalog.json', import.meta.url));
+export const v2Path = fileURLToPath(new URL('../catalog-v2.json', import.meta.url));
 const catalogFields = ['format', 'review', 'updatedAt', 'officialHosts', 'events'];
 const textFields = ['title', 'organizer', 'prize', 'announcementMethod', 'rules'];
 const dateFields = ['startDate', 'deadline', 'announcementDate', 'firstPublishedOn', 'verifiedAt'];
@@ -19,6 +21,14 @@ const timePattern = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 const timestampPattern = /^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d\+09:00$/;
 const hostPattern = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;
 const nonOfficialHost = /(^|\.)(forms\.gle|docs\.google\.com|forms\.office\.com|form\.naver\.com|naver\.me|bit\.ly|linktr\.ee|instagram\.com|kakao\.com)$/;
+const socialHost = /(^|\.)(instagram\.com|facebook\.com|fb\.com|threads\.(?:net|com)|twitter\.com|x\.com|tiktok\.com|youtube\.com|youtu\.be|blog\.naver\.com|cafe\.naver\.com|pf\.kakao\.com)$/;
+const companyRestrictedText = [
+  /(?:참가비|응모비|참여비|유료\s*(?:회원|가입|결제)|구매\s*(?:조건|필수|후|고객|인증|영수증|하신)|결제\s*(?:조건|필수|후|인증)|(?:구매|결제|입금|충전)(?:를|을)?\s*(?:해야|하셔야)|영수증\s*(?:인증|제출)|구매자\s*대상)/iu,
+  /(?:(?:회원\s*)?가입|로그인|구독)(?:이|을|를)?\s*(?:조건|필수|필요|후|해야|하신|한\s*뒤|완료\s*(?:후|인증))|회원\s*(?:만|전용|대상)|기존\s*회원에\s*한/iu,
+  /(?:팔로우|팔로잉|댓글|리그램|리트윗|친구\s*태그|좋아요)\s*(?:달기|달면|남기|남긴|작성|필수|인증|후|하기|하고|해\s*주|이벤트|를\s*달|을\s*달)|(?:구독자|팔로워)\s*(?:대상|전용)/iu,
+  /(?:도박|사행성|베팅|배팅|카지노|스포츠\s*토토|복권\s*(?:구매|판매)|현금\s*충전)/iu,
+];
+const companyRestrictedPath = /(?:^|\/)(?:login|signin|sign-in|signup|sign-up|join|register|checkout|payment|purchase|cart|buy|order|redirect)(?:[._-][\w.-]*|[A-Z][\w.-]*)?(?:\/|$)/;
 const formPath = /\/(?:survey|vote|apply|entry|login|redirect)(?:\/|[a-z0-9_.-]|$)/i;
 const categories = new Set(['quiz', 'survey', 'event']);
 const trackingQueryKey = /^(?:utm_.*|_ga(?:_.*)?|_gl|fbclid|gclid|gclsrc|dclid|msclkid|ttclid|twclid|igsh(?:id)?|mc_[ce]id|mkt_tok|yclid|wbraid|gbraid|si|spm|ref(?:_src|errer)?|tracking(?:[_-]id)?)$/i;
@@ -145,29 +155,40 @@ export function takeSourceArgs(args) {
   return { root: resolve(root), stamp, date };
 }
 
-function entryInNotice(event, hosts, sources) {
-  if (!sources) return false;
+function noticeBody(event, hosts, sources) {
+  if (!sources) return null;
   const directory = resolve(sources.root, event.id);
   const file = resolve(directory, sources.stamp + '.txt');
-  if (!lstatSync(directory, { throwIfNoEntry: false })?.isDirectory()) return false;
+  if (!lstatSync(directory, { throwIfNoEntry: false })?.isDirectory()) return null;
   const info = lstatSync(file, { throwIfNoEntry: false });
-  if (!info?.isFile() || info.size > 128 * 1024) return false;
+  if (!info?.isFile() || info.size > 128 * 1024) return null;
   const raw = new TextDecoder('utf-8', { fatal: true }).decode(readFileSync(file));
   const capture = /^URL: ([^\r\n]+)\r?\nOpenedAt: ([^\r\n]+)\r?\nFinalURL: ([^\r\n]+)\r?\n\r?\n([\s\S]*)$/.exec(raw);
-  if (!capture) return false;
+  if (!capture) return null;
   const [, requested, openedAt, final, body] = capture;
-  if (!timestampPattern.test(openedAt) || openedAt.slice(0, 10) !== sources.date) return false;
+  if (!timestampPattern.test(openedAt) || openedAt.slice(0, 10) !== sources.date) return null;
   try {
     for (const address of [requested, final]) {
       const url = new URL(address);
       if (!address.startsWith('https://') || /[\s\\]/.test(address) || !hosts.has(url.hostname)
-        || address.slice(8).split(/[/?#]/, 1)[0] !== url.hostname) return false;
+        || address.slice(8).split(/[/?#]/, 1)[0] !== url.hostname) return null;
     }
-    if (event.referenceUrl && new URL(requested).href !== new URL(event.referenceUrl).href) return false;
+    if (event.referenceUrl && new URL(requested).href !== new URL(event.referenceUrl).href) return null;
   } catch {
-    return false;
+    return null;
   }
-  return body.split(/\s+/u).includes(event.entryUrl);
+  return body;
+}
+
+function entryInNotice(event, hosts, sources) {
+  return noticeBody(event, hosts, sources)?.split(/\s+/u).includes(event.entryUrl);
+}
+
+function checkCompanyText(value, path) {
+  const normalized = value.normalize('NFKC')
+    .replace(/(?:참가비|응모비|참여비)(?:는|가|\s*[:=])?\s*(?:없|무료|0\s*원)\S*/gu, '');
+  requireCondition(!companyRestrictedText.some(pattern => pattern.test(normalized)),
+    path, '참가비·구매·결제·가입·SNS 참여·사행성 조건은 넣을 수 없습니다.');
 }
 
 function eventIdentity(event) {
@@ -176,8 +197,9 @@ function eventIdentity(event) {
 }
 
 export function validateCatalog(catalog, previous = null, { sources, schemaOnly = false } = {}) {
-  checkFields(catalog, catalogFields, 'catalog');
-  requireCondition(catalog.format === 'eungmo-toss-v1', 'format', 'eungmo-toss-v1이어야 합니다.');
+  const v2 = catalog?.format === 'eungmo-toss-v2';
+  checkFields(catalog, v2 ? [...catalogFields, 'companyHosts'] : catalogFields, 'catalog');
+  requireCondition(v2 || catalog.format === 'eungmo-toss-v1', 'format', 'eungmo-toss-v1 또는 eungmo-toss-v2여야 합니다.');
   requireCondition(catalog.review === 'ai-double-checked', 'review', 'ai-double-checked이어야 합니다.');
   requireCondition(
     typeof catalog.updatedAt === 'string' && timestampPattern.test(catalog.updatedAt) && isCalendarDate(catalog.updatedAt.slice(0, 10)),
@@ -192,6 +214,19 @@ export function validateCatalog(catalog, previous = null, { sources, schemaOnly 
       'officialHosts[' + i + ']', '공식 호스트 이름만 넣을 수 있습니다.',
     );
   }
+  const companies = new Map();
+  if (v2) {
+    checkFields(catalog.companyHosts, [], 'companyHosts', Object.keys(catalog.companyHosts ?? {}));
+    for (const [organizer, names] of Object.entries(catalog.companyHosts)) {
+      requireCondition(organizer.trim() && organizer.length <= 1800, 'companyHosts', '주최 회사 이름이 필요합니다.');
+      checkPrivacy(organizer, 'companyHosts');
+      requireCondition(Array.isArray(names) && names.length > 0 && new Set(names).size === names.length &&
+        names.every(host => typeof host === 'string' && host.length <= 253 && hostPattern.test(host) &&
+          !nonOfficialHost.test(host) && !socialHost.test(host) && !hosts.has(host)),
+      'companyHosts', '주최사별 공식 호스트가 필요합니다. 공공기관·SNS·양식 호스트는 별도로 사용하세요.');
+      companies.set(organizer, new Set(names));
+    }
+  }
   requireCondition(Array.isArray(catalog.events) && catalog.events.length <= 80, 'events', '배열로 최대 80건을 넣을 수 있습니다.');
 
   const ids = new Set();
@@ -202,7 +237,9 @@ export function validateCatalog(catalog, previous = null, { sources, schemaOnly 
     event.referenceUrl ? [[new URL(event.referenceUrl).href, event.id]] : []));
   for (const [i, event] of catalog.events.entries()) {
     const path = 'events[' + i + ']';
-    checkFields(event, requiredEventFields, path, optionalEventFields);
+    checkFields(event, v2 ? [...requiredEventFields, 'source'] : requiredEventFields, path, optionalEventFields);
+    requireCondition(!v2 || event.source === 'public' || event.source === 'company',
+      path + '.source', 'public 또는 company를 적으세요.');
     requireCondition(typeof event.id === 'string' && idPattern.test(event.id), path + '.id', '영문 소문자, 숫자, 하이픈만 허용합니다.');
     checkPrivacy(event.id, path + '.id');
     requireCondition(!ids.has(event.id), path + '.id', '중복 ID입니다.');
@@ -228,19 +265,43 @@ export function validateCatalog(catalog, previous = null, { sources, schemaOnly 
       event.startDate === null || event.deadline === null || event.startDate <= event.deadline,
       path + '.startDate', '시작일이 마감일보다 늦습니다.',
     );
-    const [reference, announcement, result] = urlFields.map(field => checkUrl(event[field], hosts, path + '.' + field));
     const former = previousById.get(event.id);
+    const company = event.source === 'company';
+    const eventHosts = company ? companies.get(event.organizer) : hosts;
+    requireCondition(eventHosts, path + '.organizer', '주최 회사의 공식 호스트를 companyHosts에 등록하세요.');
+    const [reference, announcement, result] = urlFields.map(field => checkUrl(event[field], eventHosts, path + '.' + field));
+    let companyNotice;
+    if (company) {
+      requireCondition(reference, path + '.referenceUrl', '주최 회사의 공식 상세 공고가 필요합니다.');
+      checkCompanyText([event.title, event.rules, event.announcementMethod].join('\n'), path);
+      if (!schemaOnly && (!isDeepStrictEqual(event, former) ||
+          !isDeepStrictEqual(catalog.companyHosts[event.organizer], previous?.companyHosts?.[event.organizer]))) {
+        companyNotice = noticeBody(event, eventHosts, sources);
+        requireCondition(companyNotice?.trim(), path + '.referenceUrl', '변경된 기업 행사에는 공식 공고 원문이 필요합니다.');
+        checkCompanyText(companyNotice, path + '.referenceUrl');
+      }
+    }
     if (Object.hasOwn(event, 'entryUrl')) {
-      const entry = checkUrl(event.entryUrl, hosts, path + '.entryUrl', 'entry');
-      if (entry && !hosts.has(entry.hostname) && !schemaOnly) {
+      const entry = checkUrl(event.entryUrl, eventHosts, path + '.entryUrl', 'entry');
+      if (entry && company) {
+        const entryPath = decodeURIComponent(entry.pathname);
+        requireCondition(!socialHost.test(entry.hostname) && !companyRestrictedPath.test(entryPath) &&
+          !companyRestrictedPath.test(entryPath.toLowerCase()),
+          path + '.entryUrl', 'SNS, 가입, 로그인, 구매, 결제 주소는 사용할 수 없습니다.');
+        if (companyNotice !== undefined) {
+          requireCondition(companyNotice.split(/\s+/u).includes(event.entryUrl), path + '.entryUrl',
+            '공식 공고 본문에 있는 동일한 주소가 필요합니다.');
+        }
+      }
+      if (entry && !eventHosts.has(entry.hostname) && !schemaOnly && !company) {
         requireCondition(former?.entryUrl === event.entryUrl && former.referenceUrl === event.referenceUrl
-          || entryInNotice(event, hosts, sources), path + '.entryUrl', '공식 공고 본문에 있는 동일한 주소가 필요합니다.');
+          || entryInNotice(event, eventHosts, sources), path + '.entryUrl', '공식 공고 본문에 있는 동일한 주소가 필요합니다.');
       }
     }
     if (Object.hasOwn(event, 'category')) {
       requireCondition(categories.has(event.category), path + '.category', 'quiz, survey, event 중 하나가 필요합니다.');
     }
-    if (Object.hasOwn(event, 'image')) checkImage(event.image, event.id, hosts, path + '.image');
+    if (Object.hasOwn(event, 'image')) checkImage(event.image, event.id, eventHosts, path + '.image');
     requireCondition(
       !result || (result.href !== reference?.href && result.href !== announcement?.href
         && !/(?:list|\/notice\.jsp)(?:\.do|\.jsp|\.html)?$/i.test(result.pathname)),
@@ -253,6 +314,7 @@ export function validateCatalog(catalog, previous = null, { sources, schemaOnly 
       requireCondition(!formerId || event.id === formerId, path + '.id', '기존 행사 ID를 바꿀 수 없습니다.');
     }
     if (former) {
+      requireCondition(!v2 || event.source === (former.source ?? 'public'), path + '.source', '기존 행사의 주최 분류를 바꿀 수 없습니다.');
       requireCondition(event.firstPublishedOn === former.firstPublishedOn, path + '.firstPublishedOn', '최초 게시일을 바꿀 수 없습니다.');
       requireCondition(event.verifiedAt >= former.verifiedAt, path + '.verifiedAt', '직전 확인일보다 이전일 수 없습니다.');
     }
@@ -293,19 +355,36 @@ export function readCatalog(file = catalogPath) {
   return parseCatalog(raw, '후보');
 }
 
-export function readPrevious() {
+export function asPublicV2(catalog) {
+  return { ...catalog, format: 'eungmo-toss-v2', companyHosts: {},
+    events: catalog.events.map(event => ({ ...event, source: 'public' })) };
+}
+
+export function readPrevious(v2 = false) {
   const head = spawnSync('git', ['rev-parse', '--verify', '--quiet', 'HEAD'], { cwd: repoRoot });
   if (head.status === 1 && !head.stderr?.length) return null;
   requireCondition(head.status === 0, 'HEAD', '직전 커밋을 확인할 수 없습니다.');
+  if (v2 && spawnSync('git', ['cat-file', '-e', 'HEAD:catalog-v2.json'], { cwd: repoRoot }).status === 128) {
+    const legacy = readPrevious();
+    return legacy && { ...legacy, catalog: asPublicV2(legacy.catalog) };
+  }
+  const name = v2 ? 'catalog-v2.json' : 'catalog.json';
   let raw;
   try {
-    raw = execFileSync('git', ['show', 'HEAD:catalog.json'], {
+    raw = execFileSync('git', ['show', 'HEAD:' + name], {
       cwd: repoRoot, encoding: 'utf8', maxBuffer: 4 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'],
     });
   } catch {
-    throw new Error('HEAD: 직전 커밋에서 catalog.json을 읽을 수 없습니다.');
+    throw new Error('HEAD: 직전 커밋에서 ' + name + '을 읽을 수 없습니다.');
   }
   return { raw, catalog: validateCatalog(parseCatalog(raw, '직전 커밋'), null, { schemaOnly: true }) };
+}
+
+export function readCandidate(file, v2) {
+  const result = readCatalog(file ?? (v2 ? v2Path : catalogPath));
+  requireCondition(result?.format === (v2 ? 'eungmo-toss-v2' : 'eungmo-toss-v1'),
+    'format', v2 ? '--v2는 eungmo-toss-v2만 검사합니다.' : 'eungmo-toss-v1이어야 합니다. v2는 --v2를 사용하세요.');
+  return result;
 }
 
 export function runCli(action) {
@@ -322,12 +401,15 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
     const args = process.argv.slice(2);
     const reviewInput = args[0] === '--review-input';
     if (reviewInput) args.shift();
+    const v2 = args[0] === '--v2';
+    if (v2) args.shift();
     const sources = reviewInput ? undefined : takeSourceArgs(args);
     if (args.length > 1 || args[0]?.startsWith('-') || (reviewInput && args.length !== 1)) {
-      throw new Error('사용법: node tools/validate.mjs [--sources 원문폴더 YYYYMMDD-HHmm] [후보.json]');
+      throw new Error('사용법: node tools/validate.mjs [--v2] [--sources 원문폴더 YYYYMMDD-HHmm] [후보.json]');
     }
-    const previous = reviewInput ? null : readPrevious()?.catalog;
-    const result = validateCatalog(readCatalog(args[0]), previous, { sources, schemaOnly: reviewInput });
+    const previous = reviewInput ? null : readPrevious(v2)?.catalog;
+    const candidate = reviewInput ? readCatalog(args[0]) : readCandidate(args[0], v2);
+    const result = validateCatalog(candidate, previous, { sources, schemaOnly: reviewInput });
     if (reviewInput) {
       if (result.events.length === 0) throw new Error('대조할 행사가 없습니다.');
       console.log(JSON.stringify(result));
