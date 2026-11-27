@@ -1,7 +1,7 @@
 {
   "format": "eungmo-toss-v2",
   "review": "ai-double-checked",
-  "updatedAt": "2026-11-27T22:28:06+09:00",
+  "updatedAt": "2026-11-28T08:47:42+09:00",
   "officialHosts": [
     "kosis.kr",
     "www.ganghwa.go.kr",
@@ -35,7 +35,10 @@
     "www.ehtis.or.kr",
     "www.icouncil.go.kr",
     "www.incheon.go.kr",
-    "www.daejeoni.or.kr"
+    "www.daejeoni.or.kr",
+    "nkinfo.unikorea.go.kr",
+    "www.nps.or.kr",
+    "stat.mcst.go.kr"
   ],
   "events": [
     {
@@ -1012,6 +1015,84 @@
         "credit": "AI 이미지",
         "wide": "images/daejeoni-platform-survey-2026-wide.webp",
         "square": "images/daejeoni-platform-survey-2026-square.webp"
+      },
+      "source": "public"
+    },
+    {
+      "deadlineTime": null,
+      "announcementDate": null,
+      "announcementUrl": null,
+      "resultUrl": null,
+      "firstPublishedOn": "2026-11-28",
+      "verifiedAt": "2026-11-28",
+      "category": "survey",
+      "id": "nkinfo-service-survey-2026",
+      "title": "북한정보포털 서비스 개선을 위한 설문조사",
+      "organizer": "통일부",
+      "prize": "모바일 상품권 1만 5천 원 · 추첨 300명",
+      "startDate": "2026-11-25",
+      "deadline": "2026-12-04",
+      "announcementMethod": "당첨자에게 개별 통지해요. 발표 날짜는 공고에 공개되지 않았어요.",
+      "rules": "북한정보포털 서비스 개선 설문에 참여해요. 충실히 응답한 참여자 중 추첨해요.",
+      "referenceUrl": "https://nkinfo.unikorea.go.kr/nkp/main/portalMain.do",
+      "entryUrl": null,
+      "image": {
+        "kind": "ai",
+        "credit": "AI 이미지",
+        "wide": "images/nkinfo-service-survey-2026-wide.webp",
+        "square": "images/nkinfo-service-survey-2026-square.webp"
+      },
+      "source": "public"
+    },
+    {
+      "deadlineTime": null,
+      "announcementDate": "2026-12-09",
+      "announcementUrl": "https://www.nps.or.kr/pnsgdnc/newgdnc/getOHAE0001M0List.do",
+      "resultUrl": null,
+      "firstPublishedOn": "2026-11-28",
+      "verifiedAt": "2026-11-28",
+      "category": "survey",
+      "id": "nps-website-survey-2026",
+      "title": "2026년 국민연금공단 홈페이지 만족도 조사",
+      "organizer": "국민연금공단",
+      "prize": "블루투스 무선 이어폰 · 추첨 100명",
+      "startDate": "2026-11-19",
+      "deadline": "2026-12-07",
+      "announcementMethod": "국민연금공단 홈페이지 새소식에 게시하고 당첨자에게 문자로 개별 통지해요.",
+      "rules": "국민연금공단 홈페이지 이용 고객(전 국민)이 설문에 참여해요. 참여자 중 추첨해요. 공식 마감은 12월 7일 24:00이에요.",
+      "referenceUrl": "https://www.nps.or.kr/pnsgdnc/newgdnc/getOHAE0001M1.do?hmpgBbsCd=BS20240137&hmpgCd=01&menuId=MN24000897&pageIndex=1&pstId=ZZ202600000000001262&searchGbu=&searchText=&sortSe=FR",
+      "entryUrl": "https://www.nps.or.kr/comm/pop/getOHAH0096P1.do",
+      "image": {
+        "kind": "ai",
+        "credit": "AI 이미지",
+        "wide": "images/nps-website-survey-2026-wide.webp",
+        "square": "images/nps-website-survey-2026-square.webp"
+      },
+      "source": "public"
+    },
+    {
+      "deadlineTime": null,
+      "announcementDate": null,
+      "announcementUrl": null,
+      "resultUrl": null,
+      "firstPublishedOn": "2026-11-28",
+      "verifiedAt": "2026-11-28",
+      "category": "survey",
+      "id": "mcst-stat-usage-survey-2026",
+      "title": "2026년 문화셈터 및 국가승인통계 이용자 만족도 조사",
+      "organizer": "문화체육관광부",
+      "prize": "올리브영 모바일 상품권 1만 원 · 추첨 50명",
+      "startDate": "2026-11-11",
+      "deadline": "2026-12-10",
+      "announcementMethod": "당첨자 발표 일정과 방법은 공고에 공개되지 않았어요.",
+      "rules": "문화셈터 및 국가승인통계 이용자 만족도 설문에 참여해요. 설문 참여자 중 추첨해요.",
+      "referenceUrl": "https://stat.mcst.go.kr/portal/main",
+      "entryUrl": "https://stat.mcst.go.kr/mng/survey/webNew?seq=W_5862",
+      "image": {
+        "kind": "ai",
+        "credit": "AI 이미지",
+        "wide": "images/mcst-stat-usage-survey-2026-wide.webp",
+        "square": "images/mcst-stat-usage-survey-2026-square.webp"
       },
       "source": "public"
     }
