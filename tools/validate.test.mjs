@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, rmdirSync, rmSync, writeFileSync } from 'node:f
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { asPublicV2, validateCatalog } from './validate.mjs';
+import { asPublicV2, checkV4Base, validateCatalog } from './validate.mjs';
 
 const event = {
   id: 'example-quiz',
@@ -222,4 +222,53 @@ test('new Instagram notices require both matching captures and the original entr
   validateCatalog(v3, v3);
   assert.throws(() => validateCatalog({ ...v3, events: [{ ...socialEvent, entryUrl: external + 'Other' }] }, v3, { sources }),
     /\.entryUrl/);
+});
+
+test('v4 keeps v3 intact and rejects unavailable evidence, disallowed participation, and elapsed KST deadlines', t => {
+  const root = mkdtempSync(join(tmpdir(), 'eungmo-sns-test-'));
+  const directory = join(root, 'sns-draw');
+  const sources = { root, stamp, date: '2026-11-26' };
+  t.after(() => {
+    for (const suffix of ['', '-official-social']) {
+      for (const ext of ['.txt', '.png']) rmSync(join(directory, stamp + suffix + ext), { force: true });
+    }
+    rmdirSync(directory);
+    rmdirSync(root);
+  });
+  mkdirSync(directory);
+  const accountUrl = 'https://www.youtube.com/@OfficialOrg';
+  const referenceUrl = 'https://www.youtube.com/watch?v=ExampleVid1';
+  const sns = {
+    platform: 'youtube', accountName: '기관 공식 채널', accountUrl, evidenceKind: 'official-site', evidenceUrl,
+    methods: ['watch', 'comment'], commentTopic: '시청 소감', winnerCount: 10,
+  };
+  const row = {
+    ...event, id: 'sns-draw', title: '댓글 이벤트', source: 'sns', category: 'event', referenceUrl,
+    rules: '영상 시청 후 댓글을 남기면 추첨에 참여해요.',
+    image: { wide: 'images/sns-draw-wide.webp', square: 'images/sns-draw-square.webp', kind: 'ai', credit: 'AI 이미지' }, sns,
+  };
+  const draft = override => ({ ...v3, format: 'eungmo-toss-v4', events: [...v3.events, { ...row, ...override }] });
+  const check = (override, now = Date.parse('2026-11-26T11:30:00+09:00')) =>
+    validateCatalog(draft(override), null, { sources, now });
+  const source = (suffix, url, body) => {
+    writeFileSync(join(directory, stamp + suffix + '.txt'),
+      'URL: ' + url + '\nOpenedAt: 2026-11-26T11:30:00+09:00\nFinalURL: ' + url + '\n\n' + body);
+    writeFileSync(join(directory, stamp + suffix + '.png'), 'test capture');
+  };
+  assert.throws(() => check(), /게시 계정/);
+  source('', referenceUrl, '게시 계정: ' + accountUrl + '\n' + row.rules);
+  assert.throws(() => check(), /공식 연결/);
+  source('-official-social', evidenceUrl, '공식 연결 계정: ' + accountUrl);
+  check();
+  checkV4Base(draft(), v3);
+  assert.throws(() => checkV4Base({ ...draft(), events: [row] }, v3), /v3 전체/);
+  assert.throws(() => check({ sns: { ...sns, platform: 'tiktok' } }), /sns\.platform/);
+  assert.throws(() => check({ sns: { ...sns, evidenceUrl: undefined } }), /sns\.evidenceUrl/);
+  for (const rules of ['구매 필수', '결제 후 댓글', '앱 설치 후 참여', '전화번호를 댓글로 남겨 주세요.']) {
+    assert.throws(() => check({ rules }), /rules.*구매·결제/);
+  }
+  assert.throws(() => check({ deadlineTime: '11:29', deadline: '2026-11-26' }), /deadline.*마감/);
+  assert.throws(() => check({}, Date.parse('2026-12-04T00:00:00+09:00')), /deadline.*마감/);
+  source('', referenceUrl, '게시 계정: ' + accountUrl + '\n앱 설치 후 참여');
+  assert.throws(() => check(), /referenceUrl.*앱 설치/);
 });

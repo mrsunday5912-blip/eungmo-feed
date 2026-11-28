@@ -8,6 +8,7 @@ export const repoRoot = fileURLToPath(new URL('../', import.meta.url));
 const catalogPath = fileURLToPath(new URL('../catalog.json', import.meta.url));
 export const v2Path = fileURLToPath(new URL('../catalog-v2.json', import.meta.url));
 const v3Path = fileURLToPath(new URL('../catalog-v3.json', import.meta.url));
+const v4Path = fileURLToPath(new URL('../catalog-v4.json', import.meta.url));
 const catalogFields = ['format', 'review', 'updatedAt', 'officialHosts', 'events'];
 const textFields = ['title', 'organizer', 'prize', 'announcementMethod', 'rules'];
 const dateFields = ['startDate', 'deadline', 'announcementDate', 'firstPublishedOn', 'verifiedAt'];
@@ -25,12 +26,25 @@ const nonOfficialHost = /(^|\.)(forms\.gle|docs\.google\.com|forms\.office\.com|
 const socialHost = /(^|\.)(instagram\.com|facebook\.com|fb\.com|threads\.(?:net|com)|twitter\.com|x\.com|tiktok\.com|youtube\.com|youtu\.be|blog\.naver\.com|cafe\.naver\.com|pf\.kakao\.com)$/;
 const instagramAccount = /^https:\/\/www\.instagram\.com\/[a-z\d_][a-z\d_.]{0,29}\/$/;
 const instagramReserved = /^https:\/\/www\.instagram\.com\/(?:about|accounts|api|challenge|developer|direct|explore|legal|p|reel|reels|stories|tv|web)\/$/;
+const youtubeAccount = /^https:\/\/www\.youtube\.com\/(?:@[A-Za-z\d_.-]{3,30}|channel\/UC[A-Za-z\d_-]{22})$/;
+const youtubePost = /^https:\/\/www\.youtube\.com\/(?:watch\?v=[A-Za-z0-9_-]{11}|shorts\/[A-Za-z0-9_-]{11}|post\/Ug[A-Za-z0-9_-]{12,80})$/;
+const snsHosts = /(^|\.)(instagram\.com|youtube\.com|youtu\.be)$/;
+const snsMethods = new Set(['follow', 'like', 'comment', 'subscribe', 'watch', 'tag', 'share']);
+const snsProofBase = 'https://mrsunday5912-blip.github.io/eungmo-feed/images/';
+const paidParticipation = /(?:참가비|응모비|참여비|유료\s*(?:회원|가입|결제)|구매\s*(?:조건|필수|후|고객|인증|영수증|하신)|결제\s*(?:조건|필수|후|인증)|(?:구매|결제|입금|충전)(?:를|을)?\s*(?:해야|하셔야)|영수증\s*(?:인증|제출)|구매자\s*대상)/iu;
+const snsRestricted = [
+  paidParticipation,
+  /(?:앱|어플(?:리케이션)?)\s*(?:을|를|의)?\s*(?:설치|다운로드)\s*(?:가|는|는\s*것이)?\s*(?:필수|후|해야|한\s*뒤|하고|인증)|(?:다운로드|설치)\s*(?:한\s*뒤|후|인증)/iu,
+  /(?:댓글|코멘트)[^.!?\n]{0,80}(?:개인\s*정보|이름|성명|연락처|전화번호|휴대폰\s*번호|핸드폰\s*번호|주소|이메일)(?:[^.!?\n]{0,35}(?:남기|남겨|기재|입력|적어|공개|작성|제출))|(?:개인\s*정보|이름|성명|연락처|전화번호|휴대폰\s*번호|핸드폰\s*번호|주소|이메일)[^.!?\n]{0,45}(?:댓글|코멘트)(?:로|에)?\s*(?:남기|남겨|기재|입력|적어|공개|작성|제출)/iu,
+  /(?:purchase|payment|app\s+install)\s+(?:is\s+)?required|comment\s+(?:with\s+)?(?:your\s+)?(?:phone|email|address|full name)/iu,
+];
 const companyRestrictedText = [
-  /(?:참가비|응모비|참여비|유료\s*(?:회원|가입|결제)|구매\s*(?:조건|필수|후|고객|인증|영수증|하신)|결제\s*(?:조건|필수|후|인증)|(?:구매|결제|입금|충전)(?:를|을)?\s*(?:해야|하셔야)|영수증\s*(?:인증|제출)|구매자\s*대상)/iu,
+  paidParticipation,
   /(?:(?:회원\s*)?가입|로그인|구독)(?:이|을|를)?\s*(?:조건|필수|필요|후|해야|하신|한\s*뒤|완료\s*(?:후|인증))|회원\s*(?:만|전용|대상)|기존\s*회원에\s*한/iu,
   /(?:팔로우|팔로잉|댓글|리그램|리트윗|친구\s*태그|좋아요)\s*(?:달기|달면|남기|남긴|작성|필수|인증|후|하기|하고|해\s*주|이벤트|를\s*달|을\s*달)|(?:구독자|팔로워)\s*(?:대상|전용)/iu,
   /(?:도박|사행성|베팅|배팅|카지노|스포츠\s*토토|복권\s*(?:구매|판매)|현금\s*충전)/iu,
 ];
+
 const companyRestrictedPath = /(?:^|\/)(?:login|signin|sign-in|signup|sign-up|join|register|checkout|payment|purchase|cart|buy|order|redirect)(?:[._-][\w.-]*|[A-Z][\w.-]*)?(?:\/|$)/;
 const formPath = /\/(?:survey|vote|apply|entry|login|redirect)(?:\/|[a-z0-9_.-]|$)/i;
 const categories = new Set(['quiz', 'survey', 'event']);
@@ -211,6 +225,153 @@ export function isInstagramPostUrl(value) {
     new URL(value).href === value;
 }
 
+function checkSnsConditions(text, path) {
+  const normalized = text.normalize('NFKC')
+    .replace(/(?:참가비|응모비|참여비)(?:는|가|\s*[:=])?\s*(?:없|무료|0\s*원)\S*/gu, '')
+    .replace(/(?:구매|결제|앱\s*설치|다운로드)(?:는|가|이)?\s*(?:없이|불필요|필요\s*없\S*)/gu, '');
+  requireCondition(!snsRestricted.some(pattern => pattern.test(normalized)), path,
+    '구매·결제·앱 설치 또는 개인정보를 공개 댓글에 적는 조건은 넣을 수 없습니다.');
+}
+
+function checkSnsCapture(event, sources, path) {
+  const { accountUrl, evidenceUrl, evidenceKind } = event.sns;
+  const notice = sourceCapture(event, sources);
+  const post = event.referenceUrl;
+  const samePost = url => url === post || (event.sns.platform === 'instagram' && url === post + 'embed/captioned/');
+  const author = '게시 계정: ' + accountUrl;
+  requireCondition(notice && samePost(notice.requested) && samePost(notice.final) &&
+    notice.body.split(/\r?\n/, 1)[0] === author && notice.body.slice(author.length).trim(),
+  path + '.referenceUrl', '공개 게시물과 게시 계정이 일치하는 원문이 필요합니다.');
+  const proof = sourceCapture(event, sources, '-official-social');
+  const accountLine = (evidenceKind === 'official-site' ? '공식 연결 계정: ' : '인증 표시 계정: ') + accountUrl;
+  const proofPage = evidenceKind === 'official-site' ? evidenceUrl : accountUrl;
+  requireCondition(proof && proof.requested === proofPage && proof.final === proofPage &&
+    proof.body.split(/\r?\n/).includes(accountLine),
+  path + '.sns.evidenceUrl', '공식 연결 또는 플랫폼 인증 표시를 대조한 원문이 필요합니다.');
+  for (const suffix of ['', '-official-social']) {
+    const file = resolve(sources.root, event.id, sources.stamp + suffix + '.png');
+    requireCondition(lstatSync(file, { throwIfNoEntry: false })?.isFile(),
+      path + '.sns.evidenceUrl', '공개 게시물과 공식 계정 근거 화면이 모두 필요합니다.');
+  }
+  checkSnsConditions(notice.body, path + '.referenceUrl');
+}
+
+function checkSnsEvent(event, hosts, path, former, { sources, schemaOnly, now }) {
+  checkFields(event, [...requiredEventFields, 'source', 'category', 'image', 'sns'], path, ['entryUrl']);
+  const { sns, source, referenceUrl, ...base } = event;
+  const { id } = event;
+  requireCondition(event.category === 'event' && event.announcementUrl === null && event.resultUrl === null &&
+    event.entryUrl == null && isCalendarDate(event.deadline), path,
+  'SNS 행사는 event 분류와 확정된 마감일이 필요합니다. 응모 주소는 referenceUrl에만 적으세요.');
+  validateCatalog({
+    format: 'eungmo-toss-v1', review: 'ai-double-checked', updatedAt: '2000-01-01T00:00:00+09:00',
+    officialHosts: [...hosts], events: [{ ...base, referenceUrl: null }],
+  }, null, { schemaOnly: true });
+  checkFields(sns, ['platform', 'accountName', 'accountUrl', 'evidenceKind', 'evidenceUrl', 'methods', 'commentTopic', 'winnerCount'],
+    path + '.sns');
+  requireCondition(sns.platform === 'instagram' || sns.platform === 'youtube', path + '.sns.platform', 'instagram 또는 youtube만 허용합니다.');
+  requireCondition(sns.platform === 'instagram' ? isInstagramPostUrl(referenceUrl) :
+    typeof referenceUrl === 'string' && youtubePost.test(referenceUrl),
+  path + '.referenceUrl', '같은 플랫폼의 표준 HTTPS 게시물 주소가 필요합니다.');
+  requireCondition(typeof sns.accountUrl === 'string' && (sns.platform === 'instagram'
+    ? instagramAccount.test(sns.accountUrl) && !instagramReserved.test(sns.accountUrl) : youtubeAccount.test(sns.accountUrl)),
+  path + '.sns.accountUrl', '같은 플랫폼의 표준 HTTPS 계정 주소가 필요합니다.');
+  requireCondition(Array.isArray(sns.methods) && sns.methods.length && new Set(sns.methods).size === sns.methods.length &&
+    sns.methods.every(method => snsMethods.has(method)), path + '.sns.methods', '정의된 참여 방법을 중복 없이 하나 이상 적으세요.');
+  requireCondition(sns.winnerCount === null || (Number.isSafeInteger(sns.winnerCount) && sns.winnerCount > 0),
+    path + '.sns.winnerCount', '당첨 인원은 양의 정수 또는 미공개 시 null입니다.');
+  requireCondition(typeof sns.accountName === 'string' && sns.accountName.trim() && sns.accountName.length <= 180,
+    path + '.sns.accountName', '공식 계정 이름이 필요합니다.');
+  requireCondition(sns.commentTopic === null || (sns.methods.includes('comment') && typeof sns.commentTopic === 'string' &&
+    sns.commentTopic.trim() && sns.commentTopic.length <= 1800), path + '.sns.commentTopic', '댓글 주제를 적거나 null로 두세요.');
+  for (const [field, value] of Object.entries({ accountName: sns.accountName, commentTopic: sns.commentTopic })) {
+    if (value !== null) {
+      checkPrivacy(value, path + '.sns.' + field);
+      requireCondition(!/\b(?:[a-z][a-z0-9+.-]*:\s*\/\/|www\.|mailto:|tel:)/i.test(value.normalize('NFKC')),
+        path + '.sns.' + field, '주소는 주소 필드에만 넣으세요.');
+    }
+  }
+  if (sns.evidenceKind === 'platform-verification') {
+    requireCondition(sns.evidenceUrl === snsProofBase + id + '-verification.webp', path + '.sns.evidenceUrl',
+      '플랫폼 인증 표시 캡처의 공개 피드 이미지 주소가 필요합니다.');
+  } else {
+    requireCondition(sns.evidenceKind === 'official-site' && typeof sns.evidenceUrl === 'string',
+      path + '.sns.evidenceUrl', '공식 누리집 연결 또는 플랫폼 인증 표시 근거가 필요합니다.');
+    const evidence = checkUrl(sns.evidenceUrl, new Set(), path + '.sns.evidenceUrl', 'entry');
+    const evidenceHost = evidence.hostname;
+    requireCondition(!socialHost.test(evidenceHost) && !nonOfficialHost.test(evidenceHost),
+      path + '.sns.evidenceUrl', '주최 공식 누리집 페이지가 필요합니다.');
+    checkUrl(sns.evidenceUrl, new Set([evidenceHost]), path + '.sns.evidenceUrl');
+  }
+  checkSnsConditions([event.title, event.rules, sns.commentTopic].join('\n'), path + '.rules');
+  if (!schemaOnly) {
+    const deadline = Date.parse(event.deadline + 'T' + (event.deadlineTime ?? '23:59') + ':59.999+09:00');
+    requireCondition(deadline >= now, path + '.deadline', '마감이 지난 SNS 행사는 실을 수 없습니다.');
+    if (!isDeepStrictEqual(event, former)) checkSnsCapture(event, sources, path);
+  }
+}
+
+function validateV4(catalog, previous, options) {
+  requireCondition(Array.isArray(catalog.events), 'events', '행사 배열이 필요합니다.');
+  const { events, ...base } = catalog;
+  const legacy = events.filter(event => event?.source !== 'sns');
+  validateCatalog({ ...base, format: 'eungmo-toss-v3', events: legacy }, null, { schemaOnly: true });
+  requireCondition(legacy.every((event, index) => events[index] === event), 'events', 'v3 다음에 SNS 행사를 넣으세요.');
+  requireCondition(catalog.officialHosts.every(host => !snsHosts.test(host)), 'officialHosts', 'SNS 호스트는 등록할 수 없습니다.');
+  for (const event of legacy) {
+    const urls = [event.entryUrl, event.announcementUrl, event.resultUrl, event.image?.sourceUrl,
+      isInstagramPostUrl(event.referenceUrl) ? null : event.referenceUrl];
+    requireCondition(urls.every(url => !url || !snsHosts.test(new URL(url).hostname)),
+      'events', '기존 공식 인스타그램 공고 외에는 SNS 호스트를 SNS 행사에서만 사용하세요.');
+  }
+  const ids = new Set(legacy.map(event => event.id));
+  const identities = new Set(legacy.map(eventIdentity));
+  const posts = new Set(legacy.map(event => event.referenceUrl).filter(Boolean));
+  const previousSns = previous?.events.filter(event => event.source === 'sns') ?? [];
+  const previousById = new Map(previousSns.map(event => [event.id, event]));
+  const previousByPost = new Map(previousSns.map(event => [event.referenceUrl, event.id]));
+  const previousByIdentity = new Map(previousSns.map(event => [eventIdentity(event), event.id]));
+  const rows = events.slice(legacy.length);
+  requireCondition(rows.length <= 80, 'events', 'SNS 행사는 최대 80건입니다.');
+  const hosts = new Set(catalog.officialHosts);
+  for (const [index, event] of rows.entries()) {
+    const path = 'events[' + (legacy.length + index) + ']';
+    const former = previousById.get(event.id);
+    checkSnsEvent(event, hosts, path, former, options);
+    const identity = eventIdentity(event);
+    requireCondition(!ids.has(event.id) && !posts.has(event.referenceUrl) && !identities.has(identity),
+      path, '같은 ID, 게시물 또는 주최·제목이 중복되었습니다.');
+    requireCondition([previousByPost.get(event.referenceUrl), previousByIdentity.get(identity)]
+      .every(id => !id || id === event.id), path + '.id', '기존 SNS 행사의 ID를 바꿀 수 없습니다.');
+    if (former) {
+      requireCondition(event.firstPublishedOn === former.firstPublishedOn && event.verifiedAt >= former.verifiedAt,
+        path, '최초 게시일을 바꾸거나 직전 확인일을 앞당길 수 없습니다.');
+    }
+    ids.add(event.id);
+    identities.add(identity);
+    posts.add(event.referenceUrl);
+  }
+  return catalog;
+}
+
+export function checkV4Base(catalog, base) {
+  const { updatedAt, events, format, ...fields } = catalog;
+  const legacy = { ...fields, format: base.format, updatedAt: base.updatedAt, events: events.filter(event => event.source !== 'sns') };
+  requireCondition(updatedAt >= base.updatedAt && isDeepStrictEqual(legacy, base),
+    'catalog-v4', '현재 v3 전체가 그대로 필요합니다.');
+}
+
+export function checkSnsAssets(catalog) {
+  for (const event of catalog.events.filter(event => event.source === 'sns')) {
+    const files = [event.image.wide, event.image.square];
+    if (event.sns.evidenceKind === 'platform-verification') files.push('images/' + event.id + '-verification.webp');
+    for (const file of files) {
+      const image = lstatSync(resolve(repoRoot, file), { throwIfNoEntry: false });
+      requireCondition(image?.isFile() && image.size > 0 && image.size <= 150 * 1024, file, '150KB 이하 WebP 파일이 필요합니다.');
+    }
+  }
+}
+
 function checkOfficialSocial(entries, hosts) {
   requireCondition(Array.isArray(entries), 'officialSocial', '공식 SNS 계정 배열이 필요합니다.');
   const accounts = new Set();
@@ -255,7 +416,8 @@ function socialNoticeBody(event, account, sources, path) {
   return capture.body;
 }
 
-export function validateCatalog(catalog, previous = null, { sources, schemaOnly = false } = {}) {
+export function validateCatalog(catalog, previous = null, { sources, schemaOnly = false, now = Date.now() } = {}) {
+  if (catalog?.format === 'eungmo-toss-v4') return validateV4(catalog, previous, { sources, schemaOnly, now });
   const v3 = catalog?.format === 'eungmo-toss-v3';
   const classified = v3 || catalog?.format === 'eungmo-toss-v2';
   const fields = classified ? [...catalogFields, 'companyHosts'] : catalogFields;
@@ -452,14 +614,17 @@ export function readPrevious(v2 = false) {
   const head = spawnSync('git', ['rev-parse', '--verify', '--quiet', 'HEAD'], { cwd: repoRoot });
   if (head.status === 1 && !head.stderr?.length) return null;
   requireCondition(head.status === 0, 'HEAD', '직전 커밋을 확인할 수 없습니다.');
+  if (v2 === 'v4' && spawnSync('git', ['cat-file', '-e', 'HEAD:catalog-v4.json'], { cwd: repoRoot }).status === 128) {
+    return null;
+  }
   if (v2 === 'v3' && spawnSync('git', ['cat-file', '-e', 'HEAD:catalog-v3.json'], { cwd: repoRoot }).status === 128) {
     return readPrevious(true);
   }
-  if (v2 && v2 !== 'v3' && spawnSync('git', ['cat-file', '-e', 'HEAD:catalog-v2.json'], { cwd: repoRoot }).status === 128) {
+  if (v2 === true && spawnSync('git', ['cat-file', '-e', 'HEAD:catalog-v2.json'], { cwd: repoRoot }).status === 128) {
     const legacy = readPrevious();
     return legacy && { ...legacy, catalog: asPublicV2(legacy.catalog) };
   }
-  const name = v2 === 'v3' ? 'catalog-v3.json' : v2 ? 'catalog-v2.json' : 'catalog.json';
+  const name = v2 === 'v4' ? 'catalog-v4.json' : v2 === 'v3' ? 'catalog-v3.json' : v2 ? 'catalog-v2.json' : 'catalog.json';
   let raw;
   try {
     raw = execFileSync('git', ['show', 'HEAD:' + name], {
@@ -472,10 +637,10 @@ export function readPrevious(v2 = false) {
 }
 
 export function readCandidate(file, v2) {
-  const version = v2 === 'v3' ? 'v3' : v2 ? 'v2' : 'v1';
-  const result = readCatalog(file ?? (version === 'v3' ? v3Path : v2 ? v2Path : catalogPath));
+  const version = v2 === 'v4' ? 'v4' : v2 === 'v3' ? 'v3' : v2 ? 'v2' : 'v1';
+  const result = readCatalog(file ?? (version === 'v4' ? v4Path : version === 'v3' ? v3Path : v2 ? v2Path : catalogPath));
   requireCondition(result?.format === 'eungmo-toss-' + version,
-    'format', version === 'v1' ? 'eungmo-toss-v1이어야 합니다. v2 또는 v3는 버전 옵션을 사용하세요.' :
+    'format', version === 'v1' ? 'eungmo-toss-v1이어야 합니다. v2~v4는 버전 옵션을 사용하세요.' :
       `--${version}는 eungmo-toss-${version}만 검사합니다.`);
   return result;
 }
@@ -494,15 +659,19 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
     const args = process.argv.slice(2);
     const reviewInput = args[0] === '--review-input';
     if (reviewInput) args.shift();
-    const version = args[0] === '--v3' ? 'v3' : args[0] === '--v2';
+    const version = args[0] === '--v4' ? 'v4' : args[0] === '--v3' ? 'v3' : args[0] === '--v2';
     if (version) args.shift();
     const sources = reviewInput ? undefined : takeSourceArgs(args);
     if (args.length > 1 || args[0]?.startsWith('-') || (reviewInput && args.length !== 1)) {
-      throw new Error('사용법: node tools/validate.mjs [--v2|--v3] [--sources 원문폴더 YYYYMMDD-HHmm] [후보.json]');
+      throw new Error('사용법: node tools/validate.mjs [--v2|--v3|--v4] [--sources 원문폴더 YYYYMMDD-HHmm] [후보.json]');
     }
     const previous = reviewInput ? null : readPrevious(version)?.catalog;
-    const candidate = reviewInput && version !== 'v3' ? readCatalog(args[0]) : readCandidate(args[0], version);
+    const candidate = reviewInput && !version ? readCatalog(args[0]) : readCandidate(args[0], version);
     const result = validateCatalog(candidate, previous, { sources, schemaOnly: reviewInput });
+    if (result.format === 'eungmo-toss-v4' && !reviewInput) {
+      checkV4Base(result, readCandidate(undefined, 'v3'));
+      checkSnsAssets(result);
+    }
     if (reviewInput) {
       if (result.events.length === 0) throw new Error('대조할 행사가 없습니다.');
       console.log(JSON.stringify(result));
