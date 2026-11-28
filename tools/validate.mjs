@@ -7,6 +7,7 @@ import { isDeepStrictEqual } from 'node:util';
 export const repoRoot = fileURLToPath(new URL('../', import.meta.url));
 const catalogPath = fileURLToPath(new URL('../catalog.json', import.meta.url));
 export const v2Path = fileURLToPath(new URL('../catalog-v2.json', import.meta.url));
+const v3Path = fileURLToPath(new URL('../catalog-v3.json', import.meta.url));
 const catalogFields = ['format', 'review', 'updatedAt', 'officialHosts', 'events'];
 const textFields = ['title', 'organizer', 'prize', 'announcementMethod', 'rules'];
 const dateFields = ['startDate', 'deadline', 'announcementDate', 'firstPublishedOn', 'verifiedAt'];
@@ -22,6 +23,8 @@ const timestampPattern = /^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d\+
 const hostPattern = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;
 const nonOfficialHost = /(^|\.)(forms\.gle|docs\.google\.com|forms\.office\.com|form\.naver\.com|naver\.me|bit\.ly|linktr\.ee|instagram\.com|kakao\.com)$/;
 const socialHost = /(^|\.)(instagram\.com|facebook\.com|fb\.com|threads\.(?:net|com)|twitter\.com|x\.com|tiktok\.com|youtube\.com|youtu\.be|blog\.naver\.com|cafe\.naver\.com|pf\.kakao\.com)$/;
+const instagramAccount = /^https:\/\/www\.instagram\.com\/[a-z\d_][a-z\d_.]{0,29}\/$/;
+const instagramReserved = /^https:\/\/www\.instagram\.com\/(?:about|accounts|api|challenge|developer|direct|explore|legal|p|reel|reels|stories|tv|web)\/$/;
 const companyRestrictedText = [
   /(?:참가비|응모비|참여비|유료\s*(?:회원|가입|결제)|구매\s*(?:조건|필수|후|고객|인증|영수증|하신)|결제\s*(?:조건|필수|후|인증)|(?:구매|결제|입금|충전)(?:를|을)?\s*(?:해야|하셔야)|영수증\s*(?:인증|제출)|구매자\s*대상)/iu,
   /(?:(?:회원\s*)?가입|로그인|구독)(?:이|을|를)?\s*(?:조건|필수|필요|후|해야|하신|한\s*뒤|완료\s*(?:후|인증))|회원\s*(?:만|전용|대상)|기존\s*회원에\s*한/iu,
@@ -155,10 +158,10 @@ export function takeSourceArgs(args) {
   return { root: resolve(root), stamp, date };
 }
 
-function noticeBody(event, hosts, sources) {
+function sourceCapture(event, sources, suffix = '') {
   if (!sources) return null;
   const directory = resolve(sources.root, event.id);
-  const file = resolve(directory, sources.stamp + '.txt');
+  const file = resolve(directory, sources.stamp + suffix + '.txt');
   if (!lstatSync(directory, { throwIfNoEntry: false })?.isDirectory()) return null;
   const info = lstatSync(file, { throwIfNoEntry: false });
   if (!info?.isFile() || info.size > 128 * 1024) return null;
@@ -167,6 +170,13 @@ function noticeBody(event, hosts, sources) {
   if (!capture) return null;
   const [, requested, openedAt, final, body] = capture;
   if (!timestampPattern.test(openedAt) || openedAt.slice(0, 10) !== sources.date) return null;
+  return { requested, final, body };
+}
+
+function noticeBody(event, hosts, sources) {
+  const capture = sourceCapture(event, sources);
+  if (!capture) return null;
+  const { requested, final, body } = capture;
   try {
     for (const address of [requested, final]) {
       const url = new URL(address);
@@ -196,10 +206,61 @@ function eventIdentity(event) {
   return normalize(event.organizer) + '|' + normalize(event.title);
 }
 
+export function isInstagramPostUrl(value) {
+  return typeof value === 'string' && /^https:\/\/www\.instagram\.com\/(?:p|reel)\/[A-Za-z0-9_-]{5,32}\/$/.test(value) &&
+    new URL(value).href === value;
+}
+
+function checkOfficialSocial(entries, hosts) {
+  requireCondition(Array.isArray(entries), 'officialSocial', '공식 SNS 계정 배열이 필요합니다.');
+  const accounts = new Set();
+  const posts = new Map();
+  for (const [index, row] of entries.entries()) {
+    const path = 'officialSocial[' + index + ']';
+    checkFields(row, ['organizer', 'platform', 'accountUrl', 'evidenceUrl', 'postUrls'], path);
+    requireCondition(typeof row.organizer === 'string' && row.organizer.trim() && row.organizer.length <= 1800,
+      path + '.organizer', '기관 이름이 필요합니다.');
+    checkPrivacy(row.organizer, path + '.organizer');
+    requireCondition(row.platform === 'instagram', path + '.platform', 'instagram만 허용합니다.');
+    requireCondition(typeof row.accountUrl === 'string' && instagramAccount.test(row.accountUrl) &&
+      !instagramReserved.test(row.accountUrl) && new URL(row.accountUrl).href === row.accountUrl && !accounts.has(row.accountUrl),
+      path + '.accountUrl', '중복 없는 공식 인스타그램 프로필 주소가 필요합니다.');
+    accounts.add(row.accountUrl);
+    const evidence = checkUrl(row.evidenceUrl, hosts, path + '.evidenceUrl');
+    requireCondition(evidence && !socialHost.test(evidence.hostname) && !/%(?![a-f\d]{2})/i.test(row.evidenceUrl),
+      path + '.evidenceUrl', '기관 누리집의 공식 SNS 연결 페이지 주소가 필요합니다.');
+    requireCondition(Array.isArray(row.postUrls) && row.postUrls.length, path + '.postUrls', '승인된 게시물 주소 배열이 필요합니다.');
+    for (const url of row.postUrls) {
+      requireCondition(isInstagramPostUrl(url) && !posts.has(url), path + '.postUrls',
+        '중복 없는 인스타그램 게시물 또는 릴스 주소가 필요합니다.');
+      posts.set(url, row);
+    }
+  }
+  return posts;
+}
+
+function socialNoticeBody(event, account, sources, path) {
+  const capture = sourceCapture(event, sources);
+  const post = event.referenceUrl;
+  // Instagram의 로그인 없는 공개 캡션 화면도 같은 게시물의 원문으로 사용할 수 있어요.
+  const isPostCapture = url => url === post || url === post + 'embed/captioned/';
+  const author = '게시 계정: ' + account.accountUrl;
+  requireCondition(capture && isPostCapture(capture.requested) && isPostCapture(capture.final) &&
+    capture.body.split(/\r?\n/).includes(author) && capture.body.replace(author, '').trim(),
+    path + '.referenceUrl', '같은 게시물의 공개 원문과 공식 게시 계정 주소가 필요합니다.');
+  const evidence = sourceCapture(event, sources, '-official-social');
+  requireCondition(evidence && evidence.requested === account.evidenceUrl && evidence.final === account.evidenceUrl &&
+    evidence.body.split(/\s+/u).includes(account.accountUrl),
+    path + '.referenceUrl', '기관 누리집에 연결된 동일한 공식 계정 주소의 근거가 필요합니다.');
+  return capture.body;
+}
+
 export function validateCatalog(catalog, previous = null, { sources, schemaOnly = false } = {}) {
-  const v2 = catalog?.format === 'eungmo-toss-v2';
-  checkFields(catalog, v2 ? [...catalogFields, 'companyHosts'] : catalogFields, 'catalog');
-  requireCondition(v2 || catalog.format === 'eungmo-toss-v1', 'format', 'eungmo-toss-v1 또는 eungmo-toss-v2여야 합니다.');
+  const v3 = catalog?.format === 'eungmo-toss-v3';
+  const classified = v3 || catalog?.format === 'eungmo-toss-v2';
+  const fields = classified ? [...catalogFields, 'companyHosts'] : catalogFields;
+  checkFields(catalog, v3 ? [...fields, 'officialSocial'] : fields, 'catalog');
+  requireCondition(classified || catalog.format === 'eungmo-toss-v1', 'format', 'eungmo-toss-v1, eungmo-toss-v2 또는 eungmo-toss-v3여야 합니다.');
   requireCondition(catalog.review === 'ai-double-checked', 'review', 'ai-double-checked이어야 합니다.');
   requireCondition(
     typeof catalog.updatedAt === 'string' && timestampPattern.test(catalog.updatedAt) && isCalendarDate(catalog.updatedAt.slice(0, 10)),
@@ -215,7 +276,7 @@ export function validateCatalog(catalog, previous = null, { sources, schemaOnly 
     );
   }
   const companies = new Map();
-  if (v2) {
+  if (classified) {
     checkFields(catalog.companyHosts, [], 'companyHosts', Object.keys(catalog.companyHosts ?? {}));
     for (const [organizer, names] of Object.entries(catalog.companyHosts)) {
       requireCondition(organizer.trim() && organizer.length <= 1800, 'companyHosts', '주최 회사 이름이 필요합니다.');
@@ -227,18 +288,21 @@ export function validateCatalog(catalog, previous = null, { sources, schemaOnly 
       companies.set(organizer, new Set(names));
     }
   }
+  const socialPosts = v3 ? checkOfficialSocial(catalog.officialSocial, hosts) : new Map();
+  const previousSocial = new Map(previous?.officialSocial?.flatMap(row => row.postUrls.map(url => [url, row])));
   requireCondition(Array.isArray(catalog.events) && catalog.events.length <= 80, 'events', '배열로 최대 80건을 넣을 수 있습니다.');
 
   const ids = new Set();
   const identities = new Set();
+  const socialReferences = new Set();
   const previousById = new Map(previous?.events.map(event => [event.id, event]));
   const previousByIdentity = new Map(previous?.events.map(event => [eventIdentity(event), event.id]));
   const previousBySource = new Map(previous?.events.flatMap(event =>
     event.referenceUrl ? [[new URL(event.referenceUrl).href, event.id]] : []));
   for (const [i, event] of catalog.events.entries()) {
     const path = 'events[' + i + ']';
-    checkFields(event, v2 ? [...requiredEventFields, 'source'] : requiredEventFields, path, optionalEventFields);
-    requireCondition(!v2 || event.source === 'public' || event.source === 'company',
+    checkFields(event, classified ? [...requiredEventFields, 'source'] : requiredEventFields, path, optionalEventFields);
+    requireCondition(!classified || event.source === 'public' || event.source === 'company',
       path + '.source', 'public 또는 company를 적으세요.');
     requireCondition(typeof event.id === 'string' && idPattern.test(event.id), path + '.id', '영문 소문자, 숫자, 하이픈만 허용합니다.');
     checkPrivacy(event.id, path + '.id');
@@ -269,7 +333,27 @@ export function validateCatalog(catalog, previous = null, { sources, schemaOnly 
     const company = event.source === 'company';
     const eventHosts = company ? companies.get(event.organizer) : hosts;
     requireCondition(eventHosts, path + '.organizer', '주최 회사의 공식 호스트를 companyHosts에 등록하세요.');
-    const [reference, announcement, result] = urlFields.map(field => checkUrl(event[field], eventHosts, path + '.' + field));
+    const account = socialPosts.get(event.referenceUrl);
+    let reference;
+    let socialNotice;
+    if (v3 && isInstagramPostUrl(event.referenceUrl)) {
+      requireCondition(account && account.organizer === event.organizer && event.source === 'public',
+        path + '.referenceUrl', '같은 주최 기관의 공식 인스타그램 계정에 등록된 게시물만 허용합니다.');
+      requireCondition(event.category === 'survey' || event.category === 'quiz',
+        path + '.category', '공식 인스타그램 행사에는 설문 또는 퀴즈만 허용합니다.');
+      requireCondition(!socialReferences.has(event.referenceUrl), path + '.referenceUrl', '같은 인스타그램 게시물을 중복 등록할 수 없습니다.');
+      socialReferences.add(event.referenceUrl);
+      reference = new URL(event.referenceUrl);
+      const previousAccount = previousSocial.get(event.referenceUrl);
+      if (!schemaOnly && (!isDeepStrictEqual(event, former) || previousAccount?.accountUrl !== account.accountUrl ||
+          previousAccount?.evidenceUrl !== account.evidenceUrl)) {
+        socialNotice = socialNoticeBody(event, account, sources, path);
+      }
+    } else {
+      reference = checkUrl(event.referenceUrl, eventHosts, path + '.referenceUrl');
+    }
+    const announcement = checkUrl(event.announcementUrl, eventHosts, path + '.announcementUrl');
+    const result = checkUrl(event.resultUrl, eventHosts, path + '.resultUrl');
     let companyNotice;
     if (company) {
       requireCondition(reference, path + '.referenceUrl', '주최 회사의 공식 상세 공고가 필요합니다.');
@@ -293,7 +377,10 @@ export function validateCatalog(catalog, previous = null, { sources, schemaOnly 
             '공식 공고 본문에 있는 동일한 주소가 필요합니다.');
         }
       }
-      if (entry && !eventHosts.has(entry.hostname) && !schemaOnly && !company) {
+      if (entry && account) {
+        requireCondition(socialNotice === undefined || socialNotice.split(/\s+/u).includes(event.entryUrl),
+          path + '.entryUrl', '공식 공고 본문에 있는 동일한 주소가 필요합니다.');
+      } else if (entry && !eventHosts.has(entry.hostname) && !schemaOnly && !company) {
         requireCondition(former?.entryUrl === event.entryUrl && former.referenceUrl === event.referenceUrl
           || entryInNotice(event, eventHosts, sources), path + '.entryUrl', '공식 공고 본문에 있는 동일한 주소가 필요합니다.');
       }
@@ -315,7 +402,7 @@ export function validateCatalog(catalog, previous = null, { sources, schemaOnly 
       requireCondition(!formerId || event.id === formerId, path + '.id', '기존 행사 ID를 바꿀 수 없습니다.');
     }
     if (former) {
-      requireCondition(!v2 || event.source === (former.source ?? 'public'), path + '.source', '기존 행사의 주최 분류를 바꿀 수 없습니다.');
+      requireCondition(!classified || event.source === (former.source ?? 'public'), path + '.source', '기존 행사의 주최 분류를 바꿀 수 없습니다.');
       requireCondition(event.firstPublishedOn === former.firstPublishedOn, path + '.firstPublishedOn', '최초 게시일을 바꿀 수 없습니다.');
       requireCondition(event.verifiedAt >= former.verifiedAt, path + '.verifiedAt', '직전 확인일보다 이전일 수 없습니다.');
     }
@@ -365,11 +452,14 @@ export function readPrevious(v2 = false) {
   const head = spawnSync('git', ['rev-parse', '--verify', '--quiet', 'HEAD'], { cwd: repoRoot });
   if (head.status === 1 && !head.stderr?.length) return null;
   requireCondition(head.status === 0, 'HEAD', '직전 커밋을 확인할 수 없습니다.');
-  if (v2 && spawnSync('git', ['cat-file', '-e', 'HEAD:catalog-v2.json'], { cwd: repoRoot }).status === 128) {
+  if (v2 === 'v3' && spawnSync('git', ['cat-file', '-e', 'HEAD:catalog-v3.json'], { cwd: repoRoot }).status === 128) {
+    return readPrevious(true);
+  }
+  if (v2 && v2 !== 'v3' && spawnSync('git', ['cat-file', '-e', 'HEAD:catalog-v2.json'], { cwd: repoRoot }).status === 128) {
     const legacy = readPrevious();
     return legacy && { ...legacy, catalog: asPublicV2(legacy.catalog) };
   }
-  const name = v2 ? 'catalog-v2.json' : 'catalog.json';
+  const name = v2 === 'v3' ? 'catalog-v3.json' : v2 ? 'catalog-v2.json' : 'catalog.json';
   let raw;
   try {
     raw = execFileSync('git', ['show', 'HEAD:' + name], {
@@ -382,9 +472,11 @@ export function readPrevious(v2 = false) {
 }
 
 export function readCandidate(file, v2) {
-  const result = readCatalog(file ?? (v2 ? v2Path : catalogPath));
-  requireCondition(result?.format === (v2 ? 'eungmo-toss-v2' : 'eungmo-toss-v1'),
-    'format', v2 ? '--v2는 eungmo-toss-v2만 검사합니다.' : 'eungmo-toss-v1이어야 합니다. v2는 --v2를 사용하세요.');
+  const version = v2 === 'v3' ? 'v3' : v2 ? 'v2' : 'v1';
+  const result = readCatalog(file ?? (version === 'v3' ? v3Path : v2 ? v2Path : catalogPath));
+  requireCondition(result?.format === 'eungmo-toss-' + version,
+    'format', version === 'v1' ? 'eungmo-toss-v1이어야 합니다. v2 또는 v3는 버전 옵션을 사용하세요.' :
+      `--${version}는 eungmo-toss-${version}만 검사합니다.`);
   return result;
 }
 
@@ -402,14 +494,14 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
     const args = process.argv.slice(2);
     const reviewInput = args[0] === '--review-input';
     if (reviewInput) args.shift();
-    const v2 = args[0] === '--v2';
-    if (v2) args.shift();
+    const version = args[0] === '--v3' ? 'v3' : args[0] === '--v2';
+    if (version) args.shift();
     const sources = reviewInput ? undefined : takeSourceArgs(args);
     if (args.length > 1 || args[0]?.startsWith('-') || (reviewInput && args.length !== 1)) {
-      throw new Error('사용법: node tools/validate.mjs [--v2] [--sources 원문폴더 YYYYMMDD-HHmm] [후보.json]');
+      throw new Error('사용법: node tools/validate.mjs [--v2|--v3] [--sources 원문폴더 YYYYMMDD-HHmm] [후보.json]');
     }
-    const previous = reviewInput ? null : readPrevious(v2)?.catalog;
-    const candidate = reviewInput ? readCatalog(args[0]) : readCandidate(args[0], v2);
+    const previous = reviewInput ? null : readPrevious(version)?.catalog;
+    const candidate = reviewInput && version !== 'v3' ? readCatalog(args[0]) : readCandidate(args[0], version);
     const result = validateCatalog(candidate, previous, { sources, schemaOnly: reviewInput });
     if (reviewInput) {
       if (result.events.length === 0) throw new Error('대조할 행사가 없습니다.');

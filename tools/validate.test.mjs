@@ -165,3 +165,61 @@ test('an external form passes only with the exact URL in the matching official n
   }), draft), /\.entryUrl/);
   validateCatalog(candidate({ entryUrl: null }), draft);
 });
+
+const instagramPost = 'https://www.instagram.com/p/OfficialPost/';
+const instagramAccount = 'https://www.instagram.com/example_agency/';
+const evidenceUrl = 'https://example.go.kr/social';
+const social = { organizer: event.organizer, platform: 'instagram', accountUrl: instagramAccount, evidenceUrl,
+  postUrls: [instagramPost] };
+const socialEvent = { ...event, source: 'public', category: 'quiz', referenceUrl: instagramPost, entryUrl: external };
+const v3 = { ...asPublicV2(candidate()), format: 'eungmo-toss-v3', officialSocial: [social], events: [socialEvent] };
+
+test('v3 binds each canonical post to its registered public organizer and leaves v2 strict', () => {
+  const validate = data => validateCatalog(data, null, { schemaOnly: true });
+  validate(v3);
+  assert.throws(() => validate({ ...v3, format: 'eungmo-toss-v2' }), /정의되지 않은 필드/);
+  assert.throws(() => validate(asPublicV2(candidate({ referenceUrl: instagramPost }))), /\.referenceUrl/);
+  for (const patch of [
+    { officialSocial: [] },
+    { officialSocial: [{ ...social, organizer: '다른 주최 기관' }] },
+    { officialSocial: [{ ...social, evidenceUrl: 'https://example.go.kr:443/social' }] },
+    { officialSocial: [{ ...social, evidenceUrl: instagramAccount }] },
+    { officialSocial: [{ ...social, accountUrl: 'https://www.instagram.com/explore/' }] },
+    { officialSocial: [{ ...social, postUrls: [instagramAccount] }] },
+    { events: [{ ...socialEvent, referenceUrl: 'https://www.instagram.com/p/UnknownPost/' }] },
+    { events: [{ ...socialEvent, referenceUrl: instagramAccount }] },
+    { events: [{ ...socialEvent, referenceUrl: instagramPost + '?igsh=tracking' }] },
+    { events: [{ ...socialEvent, category: 'event' }] },
+    { events: [socialEvent, { ...socialEvent, id: 'other-survey', title: '다른 이름' }] },
+  ]) {
+    assert.throws(() => validate({ ...v3, ...patch }), /officialSocial|\.referenceUrl|\.category/);
+  }
+});
+
+test('new Instagram notices require both matching captures and the original entry URL', t => {
+  const root = mkdtempSync(join(tmpdir(), 'eungmo-social-test-'));
+  const directory = join(root, event.id);
+  const sources = { root, stamp, date: '2026-11-26' };
+  mkdirSync(directory);
+  t.after(() => {
+    for (const suffix of ['', '-official-social']) rmSync(join(directory, stamp + suffix + '.txt'), { force: true });
+    rmdirSync(directory);
+    rmdirSync(root);
+  });
+  const write = (suffix, url, body, final = url) => writeFileSync(join(directory, stamp + suffix + '.txt'),
+    'URL: ' + url + '\nOpenedAt: 2026-11-26T11:30:00+09:00\nFinalURL: ' + final + '\n\n' + body);
+  const embedded = instagramPost + 'embed/captioned/';
+  const body = '게시 계정: ' + instagramAccount + '\n공식 행사에 참여하기\n' + external;
+  assert.throws(() => validateCatalog(v3, null, { sources }), /공개 원문/);
+  write('', embedded, body.replace(instagramAccount, 'https://www.instagram.com/other_agency/'));
+  assert.throws(() => validateCatalog(v3, null, { sources }), /공개 원문/);
+  write('', embedded, body, 'https://www.instagram.com/p/AnotherPost/');
+  assert.throws(() => validateCatalog(v3, null, { sources }), /공개 원문/);
+  write('', embedded, body);
+  assert.throws(() => validateCatalog(v3, null, { sources }), /동일한 공식 계정/);
+  write('-official-social', evidenceUrl, '공식 SNS: ' + instagramAccount);
+  validateCatalog(v3, null, { sources });
+  validateCatalog(v3, v3);
+  assert.throws(() => validateCatalog({ ...v3, events: [{ ...socialEvent, entryUrl: external + 'Other' }] }, v3, { sources }),
+    /\.entryUrl/);
+});
