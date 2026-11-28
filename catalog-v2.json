@@ -1,7 +1,7 @@
 {
   "format": "eungmo-toss-v2",
   "review": "ai-double-checked",
-  "updatedAt": "2026-11-28T10:17:52+09:00",
+  "updatedAt": "2026-11-28T16:26:17+09:00",
   "officialHosts": [
     "kosis.kr",
     "www.ganghwa.go.kr",
@@ -38,7 +38,10 @@
     "www.daejeoni.or.kr",
     "nkinfo.unikorea.go.kr",
     "www.nps.or.kr",
-    "stat.mcst.go.kr"
+    "stat.mcst.go.kr",
+    "ai.kisdi.re.kr",
+    "enews.sen.go.kr",
+    "ggtour.or.kr"
   ],
   "events": [
     {
@@ -956,6 +959,110 @@
         "credit": "AI 이미지",
         "wide": "images/mcst-stat-usage-survey-2026-wide.webp",
         "square": "images/mcst-stat-usage-survey-2026-square.webp"
+      },
+      "source": "public"
+    },
+    {
+      "deadlineTime": null,
+      "announcementDate": "2026-12-08",
+      "announcementUrl": "https://ai.kisdi.re.kr/aieth/bbs/B0000086/list.do?menuNo=400019",
+      "resultUrl": null,
+      "firstPublishedOn": "2026-11-28",
+      "verifiedAt": "2026-11-28",
+      "category": "quiz",
+      "id": "kisdi-ai-ethics-quiz-2026",
+      "title": "2026 인공지능 윤리 소통채널 퀴즈 이벤트",
+      "organizer": "정보통신정책연구원",
+      "prize": "올리브영 기프트카드 1만 원 100명 · 네이버페이 포인트 1만 원 100명",
+      "startDate": "2026-11-27",
+      "deadline": "2026-12-04",
+      "announcementMethod": "인공지능 윤리 소통채널 공지사항에서 발표해요.",
+      "rules": "인공지능 윤리 소통채널을 참고해 퀴즈를 풀어요. 모든 문항을 맞힌 응모자 중 추첨하며, 1인 1회 참여할 수 있어요.",
+      "referenceUrl": "https://ai.kisdi.re.kr/aieth/bbs/B0000086/view.do?menuNo=400019&nttId=1717&pageIndex=1",
+      "entryUrl": "https://naver.me/5WUj5x6K",
+      "image": {
+        "kind": "ai",
+        "credit": "AI 이미지",
+        "wide": "images/kisdi-ai-ethics-quiz-2026-wide.webp",
+        "square": "images/kisdi-ai-ethics-quiz-2026-square.webp"
+      },
+      "source": "public"
+    },
+    {
+      "deadlineTime": null,
+      "announcementDate": "2026-11-30",
+      "announcementUrl": "https://data.ijto.or.kr/bbs/BBSMSTR_000000000080/list.do",
+      "resultUrl": null,
+      "firstPublishedOn": "2026-11-28",
+      "verifiedAt": "2026-11-28",
+      "category": "quiz",
+      "id": "ijto-tourism-data-quiz-2026-11",
+      "title": "11월 제주 관광 데이터 한 판! 비주류 데이터의 반란",
+      "organizer": "제주관광공사",
+      "prize": "네이버페이 포인트 1만 원 · 50명",
+      "startDate": "2026-11-04",
+      "deadline": "2026-11-29",
+      "announcementMethod": "제주관광빅데이터플랫폼에 발표하고 같은 날 경품을 발송해요.",
+      "rules": "제주관광빅데이터플랫폼에서 데이터를 확인하고 네이버폼으로 퀴즈 답을 제출해요. 퀴즈 만점자 중 50명을 무작위로 뽑아요.",
+      "referenceUrl": "https://data.ijto.or.kr/bbs/BBSMSTR_000000000080/view.do?nttId=H000000000883Oi1jL2z",
+      "entryUrl": "https://naver.me/GWWcfQMe",
+      "image": {
+        "kind": "ai",
+        "credit": "AI 이미지",
+        "wide": "images/ijto-tourism-data-quiz-2026-11-wide.webp",
+        "square": "images/ijto-tourism-data-quiz-2026-11-square.webp"
+      },
+      "source": "public"
+    },
+    {
+      "deadlineTime": null,
+      "announcementDate": "2026-12-10",
+      "announcementUrl": "https://enews.sen.go.kr/",
+      "resultUrl": null,
+      "firstPublishedOn": "2026-11-28",
+      "verifiedAt": "2026-11-28",
+      "category": "survey",
+      "id": "sen-magazine-reader-survey-2026",
+      "title": "2026 지금 서울교육 독자 만족도 설문조사",
+      "organizer": "서울특별시교육청",
+      "prize": "BBQ 황금올리브치킨 10명 · 투썸플레이스 떠먹는 스초생과 아메리카노 세트 20명 · 투썸플레이스 아이스 아메리카노 70명",
+      "startDate": "2026-11-10",
+      "deadline": "2026-11-30",
+      "announcementMethod": "지금 서울교육 웹진과 전자책에서 발표해요.",
+      "rules": "지금 서울교육 소식지에 대한 온라인 설문에 응답해요. 설문 참여자 중 100명을 추첨해요.",
+      "referenceUrl": "https://enews.sen.go.kr/news/newsArchiveView.do?webzineSn=243",
+      "entryUrl": "https://m.site.naver.com/2k4SY",
+      "image": {
+        "kind": "ai",
+        "credit": "AI 이미지",
+        "wide": "images/sen-magazine-reader-survey-2026-wide.webp",
+        "square": "images/sen-magazine-reader-survey-2026-square.webp"
+      },
+      "source": "public"
+    },
+    {
+      "deadlineTime": null,
+      "announcementDate": "2026-12-09",
+      "announcementUrl": "https://ggtour.or.kr/information/event?tab=winner",
+      "resultUrl": null,
+      "firstPublishedOn": "2026-11-28",
+      "verifiedAt": "2026-11-28",
+      "category": "survey",
+      "id": "ggtour-platform-survey-2026",
+      "title": "2026 경기관광 플랫폼 이용 만족도 설문조사",
+      "organizer": "경기관광공사",
+      "prize": "여기어때 5만 원권 50명 · 컴포즈커피 돌체라떼 500명",
+      "startDate": "2026-11-20",
+      "deadline": "2026-12-06",
+      "announcementMethod": "경기관광 플랫폼 이벤트의 당첨자 발표 게시판에서 확인해요.",
+      "rules": "경기관광 플랫폼 이용자가 설문의 모든 항목에 답해 제출하면 참여할 수 있어요. 응답자 중 추첨하며 중복 당첨은 안 돼요.",
+      "referenceUrl": "https://ggtour.or.kr/information/event/64383c1d-f83a-4984-bcf1-1a3b5d0cbbcd?tab=event",
+      "entryUrl": "https://forms.gle/1pSJVrAbJTwHSvbC9",
+      "image": {
+        "kind": "ai",
+        "credit": "AI 이미지",
+        "wide": "images/ggtour-platform-survey-2026-wide.webp",
+        "square": "images/ggtour-platform-survey-2026-square.webp"
       },
       "source": "public"
     }
